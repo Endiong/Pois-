@@ -6,6 +6,14 @@ export const AppLogo = () => (
     </svg>
 );
 
+export const AuthLogoIcon = () => (
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="12" fill="#F3F4F6"/>
+        <path d="M20 10L26 15L20 20L14 15L20 10Z" fill="#4B5563"/>
+        <path d="M14 19L20 24L26 19V23L20 28L14 23V19Z" fill="#9CA3AF"/>
+    </svg>
+);
+
 
 export const SearchIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -64,5 +72,43 @@ export const SettingsIcon = () => (
 export const CloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+export const GoogleIcon = () => (
+    <svg className="w-5 h-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M44.5 24.3H24v8.5h11.8C34.7 36.7 31.3 39 24 39c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z" fill="#FFC107"/>
+        <path d="M44.5 24.3H24v8.5h11.8C34.7 36.7 31.3 39 24 39c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z" fill="url(#paint0_linear_10_8)"/>
+        <path d="M24 11c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2c-12.2 0-22 9.8-22 22s9.8 22 22 22c6.2 0 11.7-2.6 15.7-6.8l-6.7-6.7C31.3 39 28.1 39 24 39c-7.2 0-13-5.8-13-13s5.8-13 13-13z" fill="#4CAF50"/>
+        <path d="M44.5 24.3H24v8.5h11.8c-.4 2.5-1.5 4.7-3.2 6.4l6.7 6.7c3.6-3.4 6.2-8.3 6.2-14.1 0-1.3-.2-2.7-.5-4z" fill="#1976D2"/>
+        <path d="M2 24s9.8-22 22-22c5.6 0 10.6 2.1 14.5 5.5l-6.4 6.4C30.1 12.1 27.1 11 24 11c-7.2 0-13 5.8-13 13s5.8 13 13 13c3.1 0 6.1-1.1 8.4-3l6.7 6.7C35.7 43.4 30.2 46 24 46 11.8 46 2 36.2 2 24z" fill="#FF3D00"/>
+        <defs><linearGradient id="paint0_linear_10_8" x1="2" y1="24" x2="46" y2="24" gradientUnits="userSpaceOnUse"><stop stopColor="#4285F4"/><stop offset="1" stopColor="#1976D2"/></linearGradient></defs>
+    </svg>
+);
+export const AppleIcon = () => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19.25 14.75C19.25 15.99 18.25 17 17 17C15.75 17 14.75 15.99 14.75 14.75C14.75 13.51 15.75 12.5 17 12.5C18.25 12.5 19.25 13.51 19.25 14.75ZM12.5 10C13.74 10 14.75 8.99 14.75 7.75C14.75 6.51 13.74 5.5 12.5 5.5C11.26 5.5 10.25 6.51 10.25 7.75C10.25 8.99 11.26 10 12.5 10ZM7.75 14.75C7.75 15.99 6.75 17 5.5 17C4.25 17 3.25 15.99 3.25 14.75C3.25 13.51 4.25 12.5 5.5 12.5C6.75 12.5 7.75 13.51 7.75 14.75Z" opacity="0.4"/>
+        <path d="M17.8.44a.25.25,0,0,0-.23.11L14.4,4.47a.25.25,0,0,0,.21.39H17a2,2,0,0,1,2,2v2.5a.25.25,0,0,0,.25.25h1a.25.25,0,0,0,.25-.25V6.86A6.42,6.42,0,0,0,14.14,.55a.25.25,0,0,0-.11.23l.11,3.08a.25.25,0,0,0,.24.24h3.2a.25.25,0,0,0,.24-.24Z" fill="#000000"/>
+        <path d="M17.4,11.52h2.23a.25.25,0,0,0,.22-.38l-1.34-2.31a.25.25,0,0,0-.43,0L17,10.66v2.2a.25.25,0,0,0,.25.25h.14A.25.25,0,0,0,17.4,11.52Z" fill="#000000"/>
+    </svg>
+);
+
+
+export const EyeIcon = ({ className = "w-5 h-5" }: {className?: string}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+export const EyeOffIcon = ({ className = "w-5 h-5" }: {className?: string}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L6.228 6.228" />
+  </svg>
+);
+
+export const LoaderIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+    <svg className={`animate-spin ${className}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
 );

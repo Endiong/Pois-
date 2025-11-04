@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NAV_LINKS } from '../constants';
-import { AppLogo } from './icons/Icons';
+import { AuthMode } from '../App';
 
 interface HeaderProps {
   isLoggedIn: boolean;
-  onLogin: () => void;
+  onNavigateToAuth: (mode: AuthMode) => void;
   onLogout: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogin, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ isLoggedIn, onNavigateToAuth, onLogout }) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [menuStyle, setMenuStyle] = useState({});
   const navRef = useRef<HTMLElement>(null);
@@ -66,13 +66,13 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogin, onLogout }) => {
             ) : (
               <>
                 <button
-                  onClick={onLogin}
+                  onClick={() => onNavigateToAuth('login')}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
                 >
                   Login
                 </button>
                 <button
-                  onClick={onLogin}
+                  onClick={() => onNavigateToAuth('signup')}
                   className="px-4 py-2 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors"
                 >
                   Create Account
