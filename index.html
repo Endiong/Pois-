@@ -11,24 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap" rel="stylesheet">
     <style>
       body {
-        background-color: #f8f9fa; /* A very light grey */
+        background-color: #ffffff; /* white */
         position: relative;
         overflow-x: hidden;
-      }
-      body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: -2;
-        background-image: 
-          radial-gradient(circle at 15% 25%, rgba(165, 243, 252, 0.4), transparent 40%),
-          radial-gradient(circle at 85% 65%, rgba(254, 202, 202, 0.4), transparent 40%),
-          radial-gradient(circle at 50% 85%, rgba(253, 230, 138, 0.3), transparent 40%);
-        filter: blur(100px);
-        transform: translateZ(0);
       }
       body::after {
         content: '';
@@ -38,8 +23,8 @@
         width: 200vw;
         height: 200vh;
         z-index: -1;
-        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOCIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiLz48L3N2Zz4=');
-        opacity: 0.05;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOCIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSKIvPjwvc3ZnPg==');
+        opacity: 0.1;
         animation: grain 8s steps(10) infinite;
         pointer-events: none;
         transform: translateZ(0);

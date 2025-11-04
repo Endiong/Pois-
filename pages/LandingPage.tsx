@@ -38,28 +38,42 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   ];
 
   return (
-    <div className="bg-transparent">
+    <div className="bg-white">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
-        <div className="inline-block bg-gray-100 rounded-full px-4 py-2 text-sm text-gray-600 mb-4">
-          The future of wellness is here. <a href="#" className="font-semibold text-gray-800">Learn more &rarr;</a>
-        </div>
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
-          Reclaim Your Posture. Elevate Your Life.
-        </h1>
-        <p className="max-w-2xl mx-auto text-lg text-gray-600 mb-8">
-          Poisé is your personal AI wellness coach, helping you build healthier habits for a pain-free future.
-        </p>
-        <div className="flex justify-center items-center gap-4">
-          <button onClick={onGetStarted} className="bg-black text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 hover:bg-gray-800 transition-colors">
-            Start Tracking for Free <ArrowRightIcon />
-          </button>
-        </div>
-        <p className="text-gray-500 mt-4 text-sm">$66.98 billion in productivity lost to back pain annually.</p>
-      </section>
+      <div className="relative isolate overflow-hidden">
+         <div 
+          className="absolute inset-0 -z-10"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 10% 20%, rgba(251, 146, 60, 0.2), transparent 40%),
+              radial-gradient(circle at 90% 30%, rgba(59, 130, 246, 0.15), transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(244, 114, 182, 0.2), transparent 50%)
+            `,
+            filter: 'blur(100px)',
+          }}
+        />
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
+          <div className="inline-block bg-gray-100 rounded-full px-4 py-2 text-sm text-gray-600 mb-4">
+            The future of wellness is here. <a href="#" className="font-semibold text-gray-800">Learn more &rarr;</a>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
+            Reclaim Your Posture. Elevate Your Life.
+          </h1>
+          <p className="max-w-2xl mx-auto text-lg text-gray-600 mb-8">
+            Poisé is your personal AI wellness coach, helping you build healthier habits for a pain-free future.
+          </p>
+          <div className="flex justify-center items-center gap-4">
+            <button onClick={onGetStarted} className="bg-black text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 hover:bg-gray-800 transition-colors">
+              Start Tracking for Free <ArrowRightIcon />
+            </button>
+          </div>
+          <p className="text-gray-500 mt-4 text-sm">$66.98 billion in productivity lost to back pain annually.</p>
+        </section>
+      </div>
+
 
        {/* Testimonials Section */}
-      <section className="py-24 bg-white/50 backdrop-blur-sm">
+      <section className="py-24 bg-white border-y border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-center mb-4">Trusted by the best.</h2>
            <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">Poisé is used by leading institutions and companies to improve employee wellness.</p>
@@ -81,12 +95,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24">
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-5xl font-bold mb-12">FAQs</h2>
             <div className="space-y-4">
                 {faqs.map((faq, index) => (
-                    <div key={index} className="flex justify-between items-center p-6 border border-gray-200 rounded-lg bg-white/80">
+                    <div key={index} className="flex justify-between items-center p-6 border border-gray-200 rounded-lg bg-white">
                         <p className="text-lg font-medium">{faq}</p>
                         <button className="text-gray-400 hover:text-gray-900">
                             <PlusIcon />
