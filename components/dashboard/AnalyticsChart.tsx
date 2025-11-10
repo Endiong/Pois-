@@ -1,21 +1,27 @@
 
+
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Mon', score: 85 },
-  { name: 'Tue', score: 88 },
-  { name: 'Wed', score: 82 },
-  { name: 'Thu', score: 90 },
-  { name: 'Fri', score: 92 },
-  { name: 'Sat', score: 95 },
-  { name: 'Sun', score: 93 },
-];
+interface ChartData {
+    date: string;
+    score: number;
+}
 
-const AnalyticsChart: React.FC = () => {
+interface AnalyticsChartProps {
+    theme: 'light' | 'dark';
+    data: ChartData[];
+}
+
+const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ theme, data }) => {
+  const axisColor = theme === 'dark' ? '#9ca3af' : '#6b7280';
+  const gridColor = theme === 'dark' ? '#374151' : '#e0e0e0';
+  const tooltipBg = theme === 'dark' ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)';
+  const tooltipBorder = theme === 'dark' ? '#4b5563' : '#ccc';
+
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-      <h3 className="text-xl font-semibold mb-4">Weekly Posture Score</h3>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Weekly Posture Score</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -25,15 +31,17 @@ const AnalyticsChart: React.FC = () => {
                 <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-            <XAxis dataKey="name" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" domain={[70, 100]}/>
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+            <XAxis dataKey="date" stroke={axisColor} />
+            <YAxis stroke={axisColor} domain={[70, 100]}/>
             <Tooltip
               contentStyle={{
-                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                border: '1px solid #ccc',
+                backgroundColor: tooltipBg,
+                border: `1px solid ${tooltipBorder}`,
                 borderRadius: '8px',
               }}
+               labelStyle={{ color: theme === 'dark' ? '#f3f4f6' : '#374151' }}
+               itemStyle={{ color: '#8884d8' }}
             />
             <Area type="monotone" dataKey="score" stroke="#8884d8" fillOpacity={1} fill="url(#colorScore)" />
           </AreaChart>

@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     <div className="col-span-1 lg:col-span-1">
                         <div className="flex items-center mb-4">
-                             <span className="font-logo text-2xl tracking-tighter">poisé</span>
+                             <span className="text-2xl font-logo tracking-tight">poisé</span>
                         </div>
                         <p className="text-gray-500 text-sm max-w-xs">
                             Your personal AI wellness coach for building healthier posture habits.

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback } from 'react';
 import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
@@ -12,6 +13,7 @@ export type AuthMode = 'login' | 'signup';
 const App: React.FC = () => {
   const [view, setView] = useState<View>('landing');
   const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleNavigateToAuth = useCallback((mode: AuthMode) => {
     setAuthMode(mode);
@@ -19,10 +21,12 @@ const App: React.FC = () => {
   }, []);
 
   const handleLoginSuccess = useCallback(() => {
+    setIsLoggedIn(true);
     setView('dashboard');
   }, []);
   
   const handleLogout = useCallback(() => {
+    setIsLoggedIn(false);
     setView('landing');
   }, []);
 
@@ -36,14 +40,14 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans text-gray-900">
-      {view !== 'auth' && <Header isLoggedIn={view === 'dashboard'} onNavigateToAuth={handleNavigateToAuth} onLogout={handleLogout} />}
+    <div className="min-h-screen flex flex-col font-sans text-gray-900 dark:bg-gray-900">
+      {view !== 'dashboard' && <Header isLoggedIn={isLoggedIn} onNavigateToAuth={handleNavigateToAuth} onLogout={handleLogout} />}
       <main className="flex-grow flex flex-col">
         {view === 'landing' && <LandingPage onGetStarted={handleGetStarted} />}
         {view === 'auth' && <AuthPage mode={authMode} onLoginSuccess={handleLoginSuccess} onSwitchMode={setAuthMode} onBack={handleBackToLanding} />}
-        {view === 'dashboard' && <DashboardPage />}
+        {view === 'dashboard' && <DashboardPage onLogout={handleLogout} />}
       </main>
-      {view !== 'auth' && <Footer />}
+      {view === 'landing' && <Footer />}
     </div>
   );
 };

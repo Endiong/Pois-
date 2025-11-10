@@ -6,7 +6,7 @@ if (!API_KEY) {
   console.warn("Gemini API key not found. Please set the API_KEY environment variable.");
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+export const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
 export const getPostureTip = async (): Promise<string> => {
   if (!API_KEY) {

@@ -1,42 +1,97 @@
 
-import React, { useState, useEffect } from 'react';
-import { getPostureTip } from '../../services/geminiService';
 
-const GeminiTip: React.FC = () => {
-  const [tip, setTip] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
+import React from 'react';
+import { SparklesIcon, VideoCameraIcon, TrophyIcon } from '../icons/Icons';
+import { ViewType } from '../../types';
 
-  const fetchTip = async () => {
-    setIsLoading(true);
-    const newTip = await getPostureTip();
-    setTip(newTip);
-    setIsLoading(false);
-  };
-  
-  useEffect(() => {
-    fetchTip();
-  }, []);
+interface Activity {
+  type: 'tip' | 'session' | 'goal';
+  title: string;
+  description: string;
+  time: string;
+}
 
-  return (
-    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-xl shadow-sm border border-gray-200">
-      <h3 className="text-xl font-semibold mb-3 text-indigo-800">Gemini Pro Tip</h3>
-      {isLoading ? (
-        <div className="space-y-2 animate-pulse">
-            <div className="h-4 bg-indigo-200 rounded w-5/6"></div>
-            <div className="h-4 bg-indigo-200 rounded w-3/4"></div>
+const mockActivities: Activity[] = [
+    {
+        type: 'tip',
+        title: 'Poisé AI sent a tip',
+        description: 'Remember to keep your shoulders relaxed and down, away from your ears.',
+        time: 'Just now',
+      },
+      {
+        type: 'session',
+        title: 'Session Complete',
+        description: 'You achieved a 92% posture score over 4.5 hours.',
+        time: '15m ago',
+      },
+      {
+        type: 'goal',
+        title: 'Daily Goal Met!',
+        description: 'You surpassed your 85% goal for today. Great job!',
+        time: '2h ago',
+      },
+      {
+        type: 'tip',
+        title: 'Poisé AI sent a tip',
+        description: 'Try to align your ears with your shoulders to avoid forward head posture.',
+        time: 'Yesterday',
+      },
+];
+
+const getActivityIcon = (type: Activity['type']) => {
+    const commonClass = "w-4 h-4 text-white";
+    switch(type) {
+        case 'tip': return <SparklesIcon className={commonClass} />;
+        case 'session': return <VideoCameraIcon className={commonClass} />;
+        case 'goal': return <TrophyIcon className={commonClass} />;
+        default: return null;
+    }
+}
+const getIconBgColor = (type: Activity['type']) => {
+    switch(type) {
+        case 'tip': return 'bg-indigo-500';
+        case 'session': return 'bg-blue-500';
+        case 'goal': return 'bg-green-500';
+        default: return 'bg-gray-500';
+    }
+}
+
+const ActivityItem: React.FC<{activity: Activity}> = ({ activity }) => {
+    return (
+        <div className="flex gap-3">
+            <div className={`w-8 h-8 rounded-full mt-1 ${getIconBgColor(activity.type)} flex items-center justify-center flex-shrink-0`}>
+                {getActivityIcon(activity.type)}
+            </div>
+            <div>
+                 <p className="text-sm">
+                    <span className="font-semibold text-gray-800 dark:text-gray-200">{activity.title}</span>
+                 </p>
+                 <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
+                 <div className={`mt-2 text-sm text-gray-700 dark:text-gray-300 ${activity.type === 'tip' ? 'bg-indigo-100/60 dark:bg-indigo-900/50 p-3 rounded-lg rounded-tl-none' : ''}`}>
+                    {activity.description}
+                </div>
+            </div>
         </div>
-      ) : (
-        <p className="text-indigo-700">{tip}</p>
-      )}
-      <button 
-        onClick={fetchTip} 
-        disabled={isLoading}
-        className="mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-800 disabled:opacity-50 transition-colors"
-      >
-        {isLoading ? 'Loading...' : 'Get a new tip'}
-      </button>
+    );
+};
+
+
+const ActivityFeed: React.FC<{ onNavigate: (view: ViewType) => void }> = ({ onNavigate }) => {
+  return (
+    <div className="mt-4">
+        <div className="space-y-6">
+            {mockActivities.map((activity, index) => (
+                <ActivityItem key={index} activity={activity} />
+            ))}
+        </div>
+        <button 
+            onClick={() => onNavigate('history')}
+            className="w-full mt-6 text-center text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded-md py-1"
+        >
+            View Full History
+        </button>
     </div>
   );
 };
 
-export default GeminiTip;
+export default ActivityFeed;
