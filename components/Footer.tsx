@@ -53,10 +53,10 @@ const Footer: React.FC = () => {
                     <p className="text-gray-400 text-sm mt-4 sm:mt-0">&copy; {new Date().getFullYear()} Poisé. All rights reserved.</p>
                 </div>
                 <div className="mt-8 space-y-2 flex flex-col items-center">
-                    <div className="h-px w-full rounded animated-gradient" style={gradientStyle}></div>
-                    <div className="h-px w-11/12 rounded animated-gradient opacity-75" style={gradientStyle}></div>
-                    <div className="h-px w-10/12 rounded animated-gradient opacity-50" style={gradientStyle}></div>
-                    <div className="h-px w-9/12 rounded animated-gradient opacity-25" style={gradientStyle}></div>
+                    <div className="h-1 w-full rounded animated-gradient shadow-sm" style={gradientStyle}></div>
+                    <div className="h-1 w-11/12 rounded animated-gradient shadow-sm opacity-75" style={gradientStyle}></div>
+                    <div className="h-1 w-10/12 rounded animated-gradient shadow-sm opacity-50" style={gradientStyle}></div>
+                    <div className="h-1 w-9/12 rounded animated-gradient shadow-sm opacity-25" style={gradientStyle}></div>
                 </div>
             </div>
         </footer>
