@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Chat } from '@google/genai';
-import { SendIcon, LoaderIcon, SparklesIcon } from '../icons/Icons';
+import { SendIcon, LoaderIcon, SparklesIcon, PoiséIcon } from '../icons/Icons';
 import { ai } from '../../services/geminiService';
 
 interface Message {
@@ -19,14 +18,14 @@ const Chatbot: React.FC = () => {
   useEffect(() => {
     const initChat = () => {
       const chatSession = ai.chats.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         config: {
-            systemInstruction: 'You are Poisé AI, a friendly and helpful wellness and posture assistant. Your goal is to provide supportive, concise, and actionable advice. Keep your answers friendly and relatively short.'
+            systemInstruction: 'You are "Poisé Ghost", a friendly, spectral wellness mascot. You keep a watchful eye on posture. You are supportive, witty, and use occasional ghost-related puns. Your advice is actionable and concise.'
         }
       });
       setChat(chatSession);
       setMessages([
-        { role: 'model', text: 'Hello! I am Poisé AI. How can I help you with your posture or wellness today?' }
+        { role: 'model', text: "Boo! I'm Poisé Ghost. I'm here to help you stop slouching like a tired spirit. How's your back feeling today?" }
       ]);
     };
     initChat();
@@ -54,7 +53,7 @@ const Chatbot: React.FC = () => {
       setMessages(prev => [...prev, modelMessage]);
     } catch (error) {
       console.error("Error sending message to Gemini:", error);
-      const errorMessage: Message = { role: 'model', text: "Sorry, I'm having trouble connecting right now. Please try again later." };
+      const errorMessage: Message = { role: 'model', text: "Spectral signal lost! Try again in a moment." };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -62,55 +61,57 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">AI Assistant</h1>
-        <div className="flex-grow bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col">
-            <div className="flex-grow p-6 space-y-6 overflow-y-auto">
+    <div className="flex flex-col h-[calc(100vh-12rem)] max-w-4xl mx-auto">
+        <header className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Chat with the Ghost</h1>
+            <p className="text-gray-500 mt-1">Personalized posture advice from your spectral guardian.</p>
+        </header>
+        
+        <div className="flex-grow bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden">
+            <div className="flex-1 p-6 space-y-6 overflow-y-auto no-scrollbar">
                 {messages.map((message, index) => (
                     <div key={index} className={`flex items-start gap-4 ${message.role === 'user' ? 'justify-end' : ''}`}>
                         {message.role === 'model' && (
-                            <div className="w-8 h-8 rounded-full bg-indigo-500 flex-shrink-0 flex items-center justify-center text-white">
-                                <SparklesIcon className="w-5 h-5"/>
+                            <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex-shrink-0 flex items-center justify-center text-white shadow-lg">
+                                <PoiséIcon className="w-7 h-5" />
                             </div>
                         )}
-                        <div className={`max-w-lg px-4 py-3 rounded-2xl ${
+                        <div className={`max-w-[80%] px-5 py-3 rounded-2xl shadow-sm ${
                             message.role === 'user' 
-                            ? 'bg-blue-600 text-white rounded-br-none' 
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'
+                            ? 'bg-indigo-600 text-white rounded-br-none' 
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-none border border-gray-200 dark:border-gray-700'
                         }`}>
-                            <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                            <p className="text-sm font-medium leading-relaxed">{message.text}</p>
                         </div>
-                         {message.role === 'user' && (
-                            <img src="https://i.pravatar.cc/150?u=margaret" alt="User" className="w-8 h-8 rounded-full flex-shrink-0"/>
-                        )}
                     </div>
                 ))}
                 {isLoading && (
                     <div className="flex items-start gap-4">
-                        <div className="w-8 h-8 rounded-full bg-indigo-500 flex-shrink-0 flex items-center justify-center text-white">
-                            <SparklesIcon className="w-5 h-5"/>
+                        <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex-shrink-0 flex items-center justify-center text-white">
+                            <PoiséIcon className="w-7 h-5" />
                         </div>
-                        <div className="max-w-lg px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-700 rounded-bl-none">
-                            <LoaderIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <div className="px-5 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse">
+                            <LoaderIcon className="w-5 h-5 text-gray-400" />
                         </div>
                     </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
-            <div className="p-4 border-t border-gray-200 dark:border-gray-600">
-                <form onSubmit={handleSendMessage} className="relative">
+            
+            <div className="p-6 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800">
+                <form onSubmit={handleSendMessage} className="relative flex items-center gap-2">
                     <input
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="Ask about posture, exercises, or wellness..."
-                        className="w-full pl-4 pr-12 py-3 bg-gray-100 dark:bg-gray-700 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                        placeholder="Type a message..."
+                        className="flex-1 pl-6 pr-14 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner dark:text-white transition-all"
                         disabled={isLoading}
                     />
                     <button 
                         type="submit" 
                         disabled={isLoading || !inputValue.trim()}
-                        className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-white bg-blue-600 rounded-full hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 disabled:cursor-not-allowed transition-colors"
+                        className="absolute right-2 p-2.5 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 transition-all active:scale-95 shadow-lg"
                     >
                        <SendIcon className="w-5 h-5" />
                     </button>

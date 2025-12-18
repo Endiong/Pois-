@@ -9,27 +9,44 @@
     <script>
       tailwind.config = {
         darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Outfit', 'Inter', 'sans-serif'],
+            },
+          },
+        },
       }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap" rel="stylesheet">
-    <!-- TensorFlow.js and Pose Detection Model -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+    <!-- Full TensorFlow.js bundle and Pose Detection Model -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
     <style>
       .font-logo {
         font-family: 'Cherry Bomb One', cursive;
       }
       body {
-        background-color: #ffffff; /* white */
+        background-color: #ffffff;
         position: relative;
         overflow-x: hidden;
+        font-family: 'Outfit', sans-serif;
       }
       .dark body {
-        background-color: #030712; /* gray-950 */
+        background-color: #030712;
       }
+      /* Hide scrollbar for sidebar but allow scrolling */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      
       body::after {
         content: '';
         position: fixed;
@@ -56,37 +73,14 @@
         80% { transform: translate(3%, 35%); }
         90% { transform: translate(-10%, 10%); }
       }
-      @keyframes animated-gradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
       .animated-gradient {
         background-size: 200% 200%;
         animation: animated-gradient 10s ease infinite;
       }
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-        border: 2px solid transparent;
-        background-clip: content-box;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(0, 0, 0, 0.3);
-      }
-      .dark ::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-      .dark ::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(255, 255, 255, 0.3);
+      @keyframes animated-gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
       }
     </style>
   <script type="importmap">
