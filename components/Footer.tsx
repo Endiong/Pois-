@@ -1,14 +1,52 @@
+
 import React from 'react';
 import { AppLogo, DiscordIcon, XIcon, LensIcon, InstagramIcon, GithubIcon, MediumIcon } from './icons/Icons';
+import { AppView } from '../types';
 
-const Footer: React.FC = () => {
-    const resources = ['Blog', 'Brand', 'FAQ', 'Case Studies', 'Help & Support', 'Governance'];
-    const developers = ['Build', 'Documentation', 'Technical Paper', 'Security', 'Bug Bounty'];
-    const company = ['Privacy Policy', 'Terms of Use', 'Contact', 'Manage Analytics'];
+interface FooterProps {
+    onNavigate?: (view: AppView) => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+    // Map of text to AppView
+    const resources: {name: string, view: AppView | null}[] = [
+        { name: 'Blog', view: 'blog' },
+        { name: 'Pricing', view: 'pricing' },
+        { name: 'FAQ', view: null }, // Handled as scroll on landing page usually, but for footer we might just go to landing#faq
+        { name: 'Posture Guides', view: 'guides' },
+        { name: 'Help & Support', view: 'support' },
+        { name: 'Community', view: 'community' }
+    ];
+    const developers: {name: string, view: AppView}[] = [
+        { name: 'Build', view: 'build' },
+        { name: 'Documentation', view: 'docs' },
+        { name: 'Security', view: 'security' },
+        { name: 'Bug Bounty', view: 'bug-bounty' }
+    ];
+    const company: {name: string, view: AppView}[] = [
+        { name: 'Privacy Policy', view: 'privacy' },
+        { name: 'Terms of Use', view: 'terms' },
+        { name: 'Contact', view: 'support' },
+        { name: 'Manage Analytics', view: 'analytics' }
+    ];
     const socials = [<XIcon />, <DiscordIcon />, <LensIcon />, <InstagramIcon />, <GithubIcon />, <MediumIcon />];
 
     const gradientStyle = {
         background: 'linear-gradient(to right, #22d3ee, #facc15, #fb923c, #f472b6, #c084fc)'
+    };
+
+    const handleLinkClick = (e: React.MouseEvent, view: AppView | null) => {
+        e.preventDefault();
+        if (view && onNavigate) {
+            onNavigate(view);
+            window.scrollTo(0, 0);
+        } else if (onNavigate) {
+            // Default to landing if null (like for FAQ which is on landing)
+            onNavigate('landing');
+            setTimeout(() => {
+                 document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
     };
 
     return (
@@ -26,19 +64,31 @@ const Footer: React.FC = () => {
                     <div className="col-span-1">
                         <h3 className="font-semibold text-gray-900 mb-4">Resources</h3>
                         <ul className="space-y-2">
-                            {resources.map(link => <li key={link}><a href="#" className="text-gray-500 hover:text-gray-900">{link}</a></li>)}
+                            {resources.map(link => (
+                                <li key={link.name}>
+                                    <a href="#" onClick={(e) => handleLinkClick(e, link.view)} className="text-gray-500 hover:text-gray-900">{link.name}</a>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                     <div className="col-span-1">
                         <h3 className="font-semibold text-gray-900 mb-4">Developers</h3>
                         <ul className="space-y-2">
-                            {developers.map(link => <li key={link}><a href="#" className="text-gray-500 hover:text-gray-900">{link}</a></li>)}
+                            {developers.map(link => (
+                                <li key={link.name}>
+                                    <a href="#" onClick={(e) => handleLinkClick(e, link.view)} className="text-gray-500 hover:text-gray-900">{link.name}</a>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                     <div className="col-span-1">
                         <h3 className="font-semibold text-gray-900 mb-4">Company</h3>
                         <ul className="space-y-2">
-                            {company.map(link => <li key={link}><a href="#" className="text-gray-500 hover:text-gray-900">{link}</a></li>)}
+                            {company.map(link => (
+                                <li key={link.name}>
+                                    <a href="#" onClick={(e) => handleLinkClick(e, link.view)} className="text-gray-500 hover:text-gray-900">{link.name}</a>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 </div>

@@ -1,8 +1,6 @@
-
-
 import React from 'react';
-import { SparklesIcon, VideoCameraIcon, TrophyIcon } from '../icons/Icons';
-import { ViewType } from '../../types';
+import { SparklesIcon, VideoCameraIcon, TrophyIcon, InfoCircleIcon } from '../icons/Icons';
+import { ViewType, PostureHistoryItem } from '../../types';
 
 interface Activity {
   type: 'tip' | 'session' | 'goal';
@@ -10,33 +8,6 @@ interface Activity {
   description: string;
   time: string;
 }
-
-const mockActivities: Activity[] = [
-    {
-        type: 'tip',
-        title: 'Poisé AI sent a tip',
-        description: 'Remember to keep your shoulders relaxed and down, away from your ears.',
-        time: 'Just now',
-      },
-      {
-        type: 'session',
-        title: 'Session Complete',
-        description: 'You achieved a 92% posture score over 4.5 hours.',
-        time: '15m ago',
-      },
-      {
-        type: 'goal',
-        title: 'Daily Goal Met!',
-        description: 'You surpassed your 85% goal for today. Great job!',
-        time: '2h ago',
-      },
-      {
-        type: 'tip',
-        title: 'Poisé AI sent a tip',
-        description: 'Try to align your ears with your shoulders to avoid forward head posture.',
-        time: 'Yesterday',
-      },
-];
 
 const getActivityIcon = (type: Activity['type']) => {
     const commonClass = "w-4 h-4 text-white";
@@ -49,7 +20,7 @@ const getActivityIcon = (type: Activity['type']) => {
 }
 const getIconBgColor = (type: Activity['type']) => {
     switch(type) {
-        case 'tip': return 'bg-indigo-500';
+        case 'tip': return 'bg-orange-500';
         case 'session': return 'bg-blue-500';
         case 'goal': return 'bg-green-500';
         default: return 'bg-gray-500';
@@ -67,7 +38,7 @@ const ActivityItem: React.FC<{activity: Activity}> = ({ activity }) => {
                     <span className="font-semibold text-gray-800 dark:text-gray-200">{activity.title}</span>
                  </p>
                  <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
-                 <div className={`mt-2 text-sm text-gray-700 dark:text-gray-300 ${activity.type === 'tip' ? 'bg-indigo-100/60 dark:bg-indigo-900/50 p-3 rounded-lg rounded-tl-none' : ''}`}>
+                 <div className={`mt-2 text-sm text-gray-700 dark:text-gray-300 ${activity.type === 'tip' ? 'bg-orange-50 dark:bg-orange-900/30 p-3 rounded-lg rounded-tl-none' : ''}`}>
                     {activity.description}
                 </div>
             </div>
@@ -75,12 +46,53 @@ const ActivityItem: React.FC<{activity: Activity}> = ({ activity }) => {
     );
 };
 
+interface ActivityFeedProps {
+    onNavigate: (view: ViewType) => void;
+    history: PostureHistoryItem[];
+}
 
-const ActivityFeed: React.FC<{ onNavigate: (view: ViewType) => void }> = ({ onNavigate }) => {
+const ActivityFeed: React.FC<ActivityFeedProps> = ({ onNavigate, history }) => {
+  // Generate activities based on history + static welcome/tips
+  const activities: Activity[] = [];
+
+  // Add latest session if available
+  if (history.length > 0) {
+      const latest = history[0];
+      const score = Math.round((latest.goodDuration / latest.duration) * 100);
+      activities.push({
+          type: 'session',
+          title: 'Session Complete',
+          description: `You achieved a ${score}% posture score over ${Math.ceil(latest.duration/60)} minutes.`,
+          time: new Date(latest.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+  }
+
+  // Add static tips/goals to fill the feed
+  activities.push(
+      {
+        type: 'tip',
+        title: 'Atlas sent a tip',
+        description: 'Remember to keep your shoulders relaxed and down, away from your ears.',
+        time: history.length > 0 ? 'Yesterday' : 'Just now',
+      },
+      {
+        type: 'goal',
+        title: 'Weekly Goal',
+        description: 'You are on track to meet your weekly consistency goal.',
+        time: '2 days ago',
+      }
+  );
+
   return (
     <div className="mt-4">
+        {history.length === 0 && (
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg flex gap-3 text-sm text-gray-600 dark:text-gray-400">
+                <InfoCircleIcon className="w-5 h-5 flex-shrink-0 text-blue-500" />
+                <p>Start your first live tracking session to see your activity here.</p>
+            </div>
+        )}
         <div className="space-y-6">
-            {mockActivities.map((activity, index) => (
+            {activities.slice(0, 4).map((activity, index) => (
                 <ActivityItem key={index} activity={activity} />
             ))}
         </div>

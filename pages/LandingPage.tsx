@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowRightIcon, PlusIcon, MinusIcon, CameraIcon, SparklesIcon, ChartBarSquareIcon, CheckBadgeIcon } from '../components/icons/Icons';
+import { ArrowRightIcon, PlusIcon, VideoCameraIcon, BoltIcon, PresentationChartLineIcon, CheckBadgeIcon, PoiséIcon, CheckCircleIcon, BuildingOfficeIcon } from '../components/icons/Icons';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -83,8 +83,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           }}
         />
         <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
+          
+          <div className="flex justify-center mb-8">
+             <PoiséIcon className="w-24 h-auto text-gray-900" />
+          </div>
+
           <div className="inline-block bg-gray-100 rounded-full px-4 py-2 text-sm text-gray-600 mb-4">
-            The future of wellness is here. <a href="#" className="font-semibold text-gray-800">Learn more &rarr;</a>
+            The future of wellness is here. <a href="#ai-model" className="font-semibold text-gray-800">Learn more &rarr;</a>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
             Reclaim Your Posture. <br className="hidden md:block"/> Elevate Your Life.
@@ -113,21 +118,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
                     <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-6">
-                        <CameraIcon className="w-8 h-8" />
+                        <VideoCameraIcon className="w-8 h-8" />
                     </div>
                     <h3 className="text-xl font-bold mb-3">1. Connect Camera</h3>
                     <p className="text-gray-600 text-sm">Grant access to your camera. Our AI processes video locally—your feed never leaves your computer.</p>
                 </div>
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
                     <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-6">
-                        <SparklesIcon className="w-8 h-8" />
+                        <BoltIcon className="w-8 h-8" />
                     </div>
                     <h3 className="text-xl font-bold mb-3">2. AI Feedback</h3>
                     <p className="text-gray-600 text-sm">Get real-time alerts when you slouch or lean. Poisé learns your habits and suggests actionable tips.</p>
                 </div>
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
-                        <ChartBarSquareIcon className="w-8 h-8" />
+                        <PresentationChartLineIcon className="w-8 h-8" />
                     </div>
                     <h3 className="text-xl font-bold mb-3">3. Track Progress</h3>
                     <p className="text-gray-600 text-sm">Visualize your posture trends over time. Achieve daily goals and build lasting muscle memory.</p>
@@ -136,6 +141,104 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
+      {/* Feature Deep Dive: Real-Time Monitoring */}
+      <section id="real-time-monitoring" className="py-24 bg-white border-t border-gray-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row items-center gap-16">
+                <div className="w-full md:w-1/2">
+                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-transparent z-10"></div>
+                        <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1740&auto=format&fit=crop" alt="Person working at desk" className="w-full h-full object-cover" />
+                        <div className="absolute bottom-6 left-6 z-20 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-lg flex items-center gap-3">
+                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="font-semibold text-gray-800">Tracking Active</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="w-full md:w-1/2">
+                    <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                        <VideoCameraIcon className="w-6 h-6" />
+                    </div>
+                    <h2 className="text-4xl font-bold mb-6">Real-Time Monitoring</h2>
+                    <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                        Poisé acts as your digital mirror. Our system constantly monitors your seated position, detecting subtle deviations that lead to back pain and fatigue.
+                    </p>
+                    <ul className="space-y-4 mb-8">
+                        <li className="flex items-start gap-3">
+                            <CheckCircleIcon className="w-6 h-6 text-indigo-500 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-700">Instant visual and audio alerts when you slouch.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <CheckCircleIcon className="w-6 h-6 text-indigo-500 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-700">Detects forward head posture and leaning.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <CheckCircleIcon className="w-6 h-6 text-indigo-500 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-700">Customizable sensitivity settings for your comfort.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      {/* Feature Deep Dive: AI Model */}
+      <section id="ai-model" className="py-24 bg-gray-900 text-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row-reverse items-center gap-16">
+                <div className="w-full md:w-1/2">
+                     <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-700 bg-gray-800 h-80 flex items-center justify-center group">
+                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                        <BoltIcon className="w-32 h-32 text-green-400 group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-gray-900 to-transparent">
+                            <div className="flex justify-between items-end">
+                                <div>
+                                    <p className="text-sm text-green-400 font-mono">MODEL_STATUS</p>
+                                    <p className="text-xl font-bold font-mono">ONLINE</p>
+                                </div>
+                                <p className="text-xs text-gray-400 font-mono">v2.5.0-turbo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="w-full md:w-1/2">
+                    <div className="w-12 h-12 bg-green-500/20 text-green-400 rounded-xl flex items-center justify-center mb-6">
+                        <BoltIcon className="w-6 h-6" />
+                    </div>
+                    <h2 className="text-4xl font-bold mb-6">The AI Model</h2>
+                    <p className="text-lg text-gray-400 mb-6 leading-relaxed">
+                        Powered by TensorFlow.js and MoveNet, our proprietary AI model runs entirely in your browser. It maps 17 key body points to analyze your skeletal structure in real-time.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8">
+                        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                            <h4 className="font-bold text-white mb-2">Privacy-First Architecture</h4>
+                            <p className="text-sm text-gray-400">Video data is processed locally. Zero latency, zero cloud storage.</p>
+                        </div>
+                        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                            <h4 className="font-bold text-white mb-2">Adaptive Learning</h4>
+                            <p className="text-sm text-gray-400">The model adapts to different lighting conditions and clothing types.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      {/* Pricing Preview Section (Still kept as a teaser) */}
+      <section className="py-24 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-4xl font-bold mb-6">Start your journey today</h2>
+            <p className="text-gray-600 mb-8 max-w-2xl mx-auto">Join thousands of users improving their health with Poisé.</p>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 inline-block max-w-md w-full">
+                <h3 className="text-2xl font-bold mb-2">Free Forever</h3>
+                <p className="text-gray-500 mb-6">Perfect for individuals getting started.</p>
+                <button onClick={onGetStarted} className="w-full bg-black text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-800 transition-colors">
+                    Create Free Account
+                </button>
+                <p className="mt-4 text-sm text-gray-500">Looking for more? <a href="#" onClick={(e) => { e.preventDefault(); /* Handle nav to pricing page in App */ }} className="text-indigo-600 hover:underline">View Pro Plans</a></p>
+            </div>
+        </div>
+      </section>
 
        {/* Testimonials Section */}
       <section className="py-24 bg-white border-y border-gray-200">
@@ -177,7 +280,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 bg-white">
+      <section id="faq" className="py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl">
             <h2 className="text-5xl font-bold mb-12 text-center">FAQs</h2>
             <div className="space-y-4">
@@ -188,7 +291,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                           className="w-full flex justify-between items-center p-6 text-left"
                         >
                             <p className="text-lg font-medium">{faq.q}</p>
-                            <span className={`text-gray-400 hover:text-gray-900 transition-transform duration-300 ${openFaq === index ? 'transform rotate-180' : ''}`}>
+                            <span className={`text-gray-400 hover:text-gray-900 transition-transform duration-300 ${openFaq === index ? 'rotate-45' : ''}`}>
                                <PlusIcon />
                             </span>
                         </button>
@@ -205,7 +308,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                     </div>
                 ))}
             </div>
-             <a href="#" className="text-lg text-gray-800 font-medium mt-8 inline-block hover:underline">See More &rarr;</a>
         </div>
       </section>
 

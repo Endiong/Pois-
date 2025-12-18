@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -22,13 +20,13 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ theme, data }) => {
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
       <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Weekly Posture Score</h3>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#f97316" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
@@ -41,9 +39,9 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ theme, data }) => {
                 borderRadius: '8px',
               }}
                labelStyle={{ color: theme === 'dark' ? '#f3f4f6' : '#374151' }}
-               itemStyle={{ color: '#8884d8' }}
+               itemStyle={{ color: '#f97316' }}
             />
-            <Area type="monotone" dataKey="score" stroke="#8884d8" fillOpacity={1} fill="url(#colorScore)" />
+            <Area type="monotone" dataKey="score" stroke="#f97316" fillOpacity={1} fill="url(#colorScore)" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
