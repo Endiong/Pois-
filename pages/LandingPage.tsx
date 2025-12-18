@@ -1,7 +1,6 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowRightIcon, PlusIcon, MinusIcon } from '../components/icons/Icons';
+import { ArrowRightIcon, PlusIcon, MinusIcon, CameraIcon, SparklesIcon, ChartBarSquareIcon, CheckBadgeIcon } from '../components/icons/Icons';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -88,19 +87,54 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             The future of wellness is here. <a href="#" className="font-semibold text-gray-800">Learn more &rarr;</a>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
-            Reclaim Your Posture. Elevate Your Life.
+            Reclaim Your Posture. <br className="hidden md:block"/> Elevate Your Life.
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-gray-600 mb-8">
             Poisé is your personal AI wellness coach, helping you build healthier habits for a pain-free future.
           </p>
           <div className="flex justify-center items-center gap-4">
-            <button onClick={onGetStarted} className="bg-black text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 hover:bg-gray-800 transition-colors">
+            <button onClick={onGetStarted} className="bg-black text-white px-8 py-4 rounded-full font-bold flex items-center gap-2 hover:bg-gray-800 transition-all transform hover:scale-105 shadow-xl">
               Start Tracking for Free <ArrowRightIcon />
             </button>
           </div>
-          <p className="text-gray-500 mt-4 text-sm">$66.98 billion in productivity lost to back pain annually.</p>
+          <p className="text-gray-400 mt-6 text-sm flex items-center justify-center gap-2">
+             <CheckBadgeIcon className="w-4 h-4 text-green-500"/> No credit card required. 100% Private.
+          </p>
         </section>
       </div>
+
+      {/* How it Works Section */}
+      <section className="py-24 bg-gray-50/50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+                <h2 className="text-4xl font-bold mb-4">How Poisé Works</h2>
+                <p className="text-gray-600 max-w-2xl mx-auto">Three simple steps to better health and productivity.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-6">
+                        <CameraIcon className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">1. Connect Camera</h3>
+                    <p className="text-gray-600 text-sm">Grant access to your camera. Our AI processes video locally—your feed never leaves your computer.</p>
+                </div>
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-6">
+                        <SparklesIcon className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">2. AI Feedback</h3>
+                    <p className="text-gray-600 text-sm">Get real-time alerts when you slouch or lean. Poisé learns your habits and suggests actionable tips.</p>
+                </div>
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+                        <ChartBarSquareIcon className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">3. Track Progress</h3>
+                    <p className="text-gray-600 text-sm">Visualize your posture trends over time. Achieve daily goals and build lasting muscle memory.</p>
+                </div>
+            </div>
+        </div>
+      </section>
 
 
        {/* Testimonials Section */}

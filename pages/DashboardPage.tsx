@@ -1,11 +1,11 @@
 
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import CameraView from '../components/dashboard/CameraView';
 import AnalyticsChart from '../components/dashboard/AnalyticsChart';
 import GoalProgress from '../components/dashboard/GoalProgress';
 import SetGoalModal from '../components/dashboard/SetGoalModal';
+import OnboardingModal from '../components/dashboard/OnboardingModal';
 import usePostureTracker from '../hooks/usePostureTracker';
 import { PostureStatus, ViewType, PostureHistoryItem } from '../types';
 import Chatbot from '../components/dashboard/Chatbot';
@@ -22,6 +22,7 @@ import { loadState, saveState } from '../utils/storage';
 const GOAL_STORAGE_KEY = 'poise-daily-goal';
 const HISTORY_STORAGE_KEY = 'poise-session-history';
 const USER_PROFILE_KEY = 'poise-user-profile';
+const ONBOARDING_COMPLETED_KEY = 'poise-onboarding-completed';
 
 type Theme = 'light' | 'dark';
 type UserProfile = {
@@ -638,6 +639,7 @@ const DashboardPage: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const [dailyGoal, setDailyGoal] = useState<number>(() => loadState<number>(GOAL_STORAGE_KEY) ?? 70);
   const [historyData, setHistoryData] = useState<PostureHistoryItem[]>(() => loadState<PostureHistoryItem[]>(HISTORY_STORAGE_KEY) ?? []);
   const [profile, setProfile] = useState<UserProfile>(() => loadState<UserProfile>(USER_PROFILE_KEY) ?? { name: 'Margaret', avatar: 'https://i.pravatar.cc/150?u=margaret' });
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => !loadState<boolean>(ONBOARDING_COMPLETED_KEY));
 
 
   useEffect(() => {
@@ -669,6 +671,12 @@ const DashboardPage: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           saveState(HISTORY_STORAGE_KEY, newHistory);
           return newHistory;
       });
+  };
+
+  const handleOnboardingComplete = () => {
+      setIsOnboardingOpen(false);
+      saveState(ONBOARDING_COMPLETED_KEY, true);
+      setActiveView('live');
   };
 
   const renderContent = () => {
@@ -715,6 +723,14 @@ const DashboardPage: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
             {renderContent()}
         </main>
       </div>
+      {isOnboardingOpen && (
+          <OnboardingModal 
+            userName={profile.name} 
+            onComplete={handleOnboardingComplete}
+            onSetGoal={handleSetGoal}
+            currentGoal={dailyGoal}
+          />
+      )}
     </div>
   );
 };
