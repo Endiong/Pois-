@@ -20,6 +20,8 @@ export interface PostureHistoryItem {
 
 export type ViewType = 'home' | 'live' | 'history' | 'chat' | 'goals' | 'reports' | 'settings' | 'plans' | 'badges' | 'support';
 
+export type LayoutMode = 'sidebar' | 'top';
+
 export type AppView = 
   | 'landing' 
   | 'auth' 

@@ -15,25 +15,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       quote: "Poisé has played a pivotal role in improving my workday comfort. By providing stability and real-time feedback, it bridges the gap between sedentary work and physical wellbeing.",
       author: "Jane Doe, CEO",
       company: "Health Corp",
-      logo: "https://i.pravatar.cc/150?u=jane"
+      // logo removed, using geometric initials
     },
     {
       quote: "A pioneer in digital wellness, setting high standards for accuracy, reliability, and user experience. Their achievements with Poisé have made the entire industry more attractive to users and institutions.",
       author: "John Smith, Co-Founder",
       company: "Wellness Inc",
-      logo: "https://i.pravatar.cc/150?u=john"
     },
     {
       quote: "We chose Poisé for its strong foundation in health science and its commitment to user privacy. The integration with our employee wellness program was seamless.",
       author: "Emily White, CTO",
       company: "Tech Solutions",
-      logo: "https://i.pravatar.cc/150?u=emily"
     },
      {
       quote: "The real-time alerts have been a game-changer. I'm more mindful of my posture throughout the day, and my neck pain has significantly decreased.",
       author: "Alex Ray, Developer",
       company: "Innovate LLC",
-      logo: "https://i.pravatar.cc/150?u=alex"
     }
   ];
   
@@ -66,6 +63,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     return () => clearInterval(timer);
   }, [nextTestimonial]);
 
+  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2);
+  const getAvatarStyle = (index: number) => {
+    const styles = [
+        'bg-orange-100 text-orange-600 border-orange-200',
+        'bg-blue-100 text-blue-600 border-blue-200',
+        'bg-purple-100 text-purple-600 border-purple-200',
+        'bg-green-100 text-green-600 border-green-200'
+    ];
+    return styles[index % styles.length];
+  }
+
 
   return (
     <div className="bg-white">
@@ -84,10 +92,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         />
         <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
           
-          <div className="flex justify-center mb-8">
-             <PoiséIcon className="w-24 h-auto text-gray-900" />
-          </div>
-
           <div className="inline-block bg-gray-100 rounded-full px-4 py-2 text-sm text-gray-600 mb-4">
             The future of wellness is here. <a href="#ai-model" className="font-semibold text-gray-800">Learn more &rarr;</a>
           </div>
@@ -146,10 +150,52 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row items-center gap-16">
                 <div className="w-full md:w-1/2">
-                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-transparent z-10"></div>
-                        <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1740&auto=format&fit=crop" alt="Person working at desk" className="w-full h-full object-cover" />
-                        <div className="absolute bottom-6 left-6 z-20 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-lg flex items-center gap-3">
+                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200 bg-slate-50 h-[400px] flex items-center justify-center">
+                        <svg className="w-full h-full" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                           <defs>
+                              <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                                 <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E2E8F0" strokeWidth="1"/>
+                              </pattern>
+                           </defs>
+                           <rect width="800" height="600" fill="url(#grid-pattern)" />
+                           
+                           {/* Geometric Vector Illustration */}
+                           <g transform="translate(400, 350)" className="text-slate-700">
+                              {/* Body - Abstract */}
+                              <path d="M-100 250 L-100 120 Q-100 60 0 60 Q100 60 100 120 L100 250" fill="#F1F5F9" stroke="currentColor" strokeWidth="2"/>
+                              
+                              {/* Shoulders */}
+                              <circle cx="-100" cy="120" r="6" fill="#64748B" />
+                              <circle cx="100" cy="120" r="6" fill="#64748B" />
+                              <line x1="-100" y1="120" x2="100" y2="120" stroke="#64748B" strokeWidth="2" strokeDasharray="5,5" />
+
+                              {/* Neck */}
+                              <line x1="0" y1="60" x2="0" y2="-20" stroke="currentColor" strokeWidth="2"/>
+
+                              {/* Head - Abstract */}
+                              <rect x="-40" y="-100" width="80" height="100" rx="20" fill="#E2E8F0" stroke="currentColor" strokeWidth="2"/>
+                              
+                              {/* Ears/Tracking Points */}
+                              <circle cx="-40" cy="-50" r="5" className="text-indigo-500 fill-current animate-pulse"/>
+                              <circle cx="40" cy="-50" r="5" className="text-indigo-500 fill-current animate-pulse"/>
+                              <line x1="-40" y1="-50" x2="40" y2="-50" stroke="#6366F1" strokeWidth="2" strokeDasharray="4,4" className="opacity-50"/>
+
+                              {/* Center Line */}
+                              <line x1="0" y1="-120" x2="0" y2="250" stroke="#10B981" strokeWidth="1" strokeDasharray="8,4" />
+                           </g>
+                           
+                           {/* Scanning Effect */}
+                           <rect x="0" y="0" width="800" height="2" className="text-green-400 fill-current opacity-30 animate-[scan_3s_ease-in-out_infinite]"/>
+                           <style>{`
+                             @keyframes scan {
+                               0% { transform: translateY(100px); opacity: 0; }
+                               20% { opacity: 0.5; }
+                               80% { opacity: 0.5; }
+                               100% { transform: translateY(500px); opacity: 0; }
+                             }
+                           `}</style>
+                        </svg>
+                        <div className="absolute bottom-6 left-6 z-20 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-lg flex items-center gap-3 border border-gray-100">
                             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                             <span className="font-semibold text-gray-800">Tracking Active</span>
                         </div>
@@ -187,16 +233,65 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row-reverse items-center gap-16">
                 <div className="w-full md:w-1/2">
-                     <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-700 bg-gray-800 h-80 flex items-center justify-center group">
-                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-                        <BoltIcon className="w-32 h-32 text-green-400 group-hover:scale-110 transition-transform duration-500" />
-                        <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-gray-900 to-transparent">
-                            <div className="flex justify-between items-end">
-                                <div>
-                                    <p className="text-sm text-green-400 font-mono">MODEL_STATUS</p>
-                                    <p className="text-xl font-bold font-mono">ONLINE</p>
-                                </div>
-                                <p className="text-xs text-gray-400 font-mono">v2.5.0-turbo</p>
+                     <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-700 bg-gray-900 h-80 flex items-center justify-center">
+                        <svg className="w-full h-full absolute inset-0" viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            
+                            {/* Background Grid */}
+                            <pattern id="small-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1F2937" strokeWidth="1"/>
+                            </pattern>
+                            <rect width="100%" height="100%" fill="url(#small-grid)" />
+
+                            {/* Neural Network Nodes & Connections */}
+                            <g stroke="#374151" strokeWidth="1">
+                                {/* Connections - Abstract */}
+                                <path d="M100 160 L250 80 M100 160 L250 160 M100 160 L250 240" className="animate-pulse" style={{animationDuration: '3s'}}/>
+                                <path d="M250 80 L400 160 M250 160 L400 160 M250 240 L400 160" className="animate-pulse" style={{animationDuration: '4s'}}/>
+                                <path d="M400 160 L500 160" stroke="#10B981" strokeWidth="2" strokeDasharray="4 4" className="animate-[dash_1s_linear_infinite]" />
+                            </g>
+
+                            {/* Nodes */}
+                            <g fill="#111827" stroke="#10B981" strokeWidth="2">
+                                <circle cx="100" cy="160" r="12" />
+                                
+                                <circle cx="250" cy="80" r="8" />
+                                <circle cx="250" cy="160" r="8" />
+                                <circle cx="250" cy="240" r="8" />
+                                
+                                <circle cx="400" cy="160" r="12" filter="url(#glow)"/>
+                            </g>
+                            
+                            {/* Moving Packets (Data) */}
+                            <circle r="4" fill="#34D399">
+                                <animateMotion dur="2s" repeatCount="indefinite" path="M100 160 L250 80 L400 160" />
+                            </circle>
+                            <circle r="4" fill="#34D399">
+                                <animateMotion dur="2.5s" repeatCount="indefinite" path="M100 160 L250 240 L400 160" />
+                            </circle>
+
+                            {/* Overlay Text/UI elements embedded in SVG for vector feel */}
+                            <rect x="480" y="270" width="100" height="30" rx="4" fill="#064E3B" stroke="#10B981" strokeWidth="1" opacity="0.8"/>
+                            <text x="530" y="290" textAnchor="middle" fill="#34D399" fontSize="12" fontFamily="monospace" fontWeight="bold">v2.5.0</text>
+                            <style>{`
+                                @keyframes dash {
+                                    to { stroke-dashoffset: -8; }
+                                }
+                            `}</style>
+                        </svg>
+                        
+                        <div className="absolute bottom-6 left-6 pointer-events-none">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+                                <span className="text-green-400 font-mono text-sm">PROCESSING_TENSOR_DATA</span>
                             </div>
                         </div>
                     </div>
@@ -254,7 +349,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 flex flex-col h-full">
                         <p className="text-gray-700 flex-grow text-lg italic">"{testimonial.quote}"</p>
                         <div className="mt-6 flex items-center">
-                          <img src={testimonial.logo} alt={testimonial.company} className="w-12 h-12 rounded-full mr-4" />
+                          {/* Vector Avatar */}
+                          <div className={`w-12 h-12 rounded-full mr-4 flex items-center justify-center font-bold text-sm border ${getAvatarStyle(index)}`}>
+                             {getInitials(testimonial.author)}
+                          </div>
                           <div>
                             <p className="font-semibold text-gray-900">{testimonial.author}</p>
                             <p className="text-gray-500">{testimonial.company}</p>

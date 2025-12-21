@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AppLogo, DiscordIcon, XIcon, LensIcon, InstagramIcon, GithubIcon, MediumIcon } from './icons/Icons';
+import { AppLogo, DiscordIcon, XIcon, LensIcon, InstagramIcon, GithubIcon, MediumIcon, PoiséIcon } from './icons/Icons';
 import { AppView } from '../types';
 
 interface FooterProps {
@@ -54,7 +54,8 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     <div className="col-span-1 lg:col-span-1">
-                        <div className="flex items-center mb-4">
+                        <div className="flex items-center gap-2 mb-4">
+                             <PoiséIcon className="w-8 h-8" />
                              <span className="text-2xl font-logo tracking-tight">poisé</span>
                         </div>
                         <p className="text-gray-500 text-sm max-w-xs">

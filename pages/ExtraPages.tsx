@@ -178,9 +178,33 @@ export const PostureGuidesPage = () => (
     <div className="container mx-auto px-4 max-w-4xl">
       <h1 className="text-4xl font-bold mb-12 text-center">Posture Guides</h1>
       <div className="space-y-12">
-        <div className="flex flex-col md:flex-row gap-8 items-center">
-           <img src="https://images.unsplash.com/photo-1593642532400-2682810df593?q=80&w=1000&auto=format&fit=crop" className="w-full md:w-1/2 rounded-2xl shadow-lg" alt="Sitting posture" />
-           <div>
+        <div className="flex flex-col md:flex-row gap-8 items-center bg-gray-50 p-8 rounded-3xl border border-gray-100">
+           <div className="w-full md:w-1/2 rounded-2xl bg-white border border-gray-200 p-6 flex items-center justify-center">
+               <svg viewBox="0 0 200 200" className="w-full max-w-[200px] h-auto text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2">
+                   {/* Chair */}
+                   <path d="M60 100 L60 160 M60 140 L100 140 M100 140 L100 160" stroke="#94A3B8" />
+                   <path d="M50 100 L70 100" stroke="#94A3B8" />
+                   
+                   {/* Person Sitting */}
+                   <path d="M100 160 L130 160" stroke="#475569" strokeWidth="3"/> {/* Feet */}
+                   <path d="M100 160 L100 120" stroke="#475569" strokeWidth="3"/> {/* Lower Leg */}
+                   <path d="M100 120 L65 120" stroke="#475569" strokeWidth="3"/> {/* Thigh */}
+                   <path d="M65 120 L65 70" stroke="#475569" strokeWidth="3"/> {/* Back */}
+                   <circle cx="65" cy="55" r="10" stroke="#475569" strokeWidth="3" /> {/* Head */}
+                   <path d="M65 80 L90 100" stroke="#475569" strokeWidth="3"/> {/* Arm */}
+                   
+                   {/* Desk */}
+                   <line x1="110" y1="100" x2="160" y2="100" stroke="#94A3B8" />
+                   <line x1="160" y1="100" x2="160" y2="160" stroke="#94A3B8" />
+                   <rect x="130" y="70" width="5" height="30" fill="#CBD5E1" stroke="none" /> {/* Monitor Stand */}
+                   <rect x="120" y="50" width="25" height="20" rx="2" fill="#E2E8F0" stroke="#94A3B8" /> {/* Monitor */}
+                   
+                   {/* Angle Indicators */}
+                   <path d="M100 130 A10 10 0 0 0 90 120" stroke="#10B981" strokeDasharray="2 2" />
+                   <text x="110" y="130" fontSize="10" fill="#10B981" stroke="none">90°</text>
+               </svg>
+           </div>
+           <div className="w-full md:w-1/2">
               <h2 className="text-2xl font-bold mb-4">The Ergonomic Sitting Position</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
                 Learn the 90-90-90 rule. Keep your hips, knees, and ankles at 90-degree angles. Your monitor should be at eye level to prevent neck strain.
@@ -188,9 +212,32 @@ export const PostureGuidesPage = () => (
               <a href="#" className="text-orange-600 font-semibold hover:underline">Read full guide &rarr;</a>
            </div>
         </div>
-        <div className="flex flex-col md:flex-row-reverse gap-8 items-center">
-           <img src="https://images.unsplash.com/photo-1544367563-12123d8965cd?q=80&w=1000&auto=format&fit=crop" className="w-full md:w-1/2 rounded-2xl shadow-lg" alt="Standing desk" />
-           <div>
+        
+        <div className="flex flex-col md:flex-row-reverse gap-8 items-center bg-gray-50 p-8 rounded-3xl border border-gray-100">
+           <div className="w-full md:w-1/2 rounded-2xl bg-white border border-gray-200 p-6 flex items-center justify-center">
+               <svg viewBox="0 0 200 200" className="w-full max-w-[200px] h-auto text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2">
+                   {/* Person Standing */}
+                   <path d="M70 160 L70 100" stroke="#475569" strokeWidth="3"/> {/* Legs */}
+                   <path d="M70 100 L70 60" stroke="#475569" strokeWidth="3"/> {/* Torso */}
+                   <circle cx="70" cy="45" r="10" stroke="#475569" strokeWidth="3" /> {/* Head */}
+                   <path d="M70 70 L95 90" stroke="#475569" strokeWidth="3"/> {/* Arm */}
+                   
+                   {/* Standing Desk */}
+                   <line x1="100" y1="90" x2="150" y2="90" stroke="#94A3B8" />
+                   <line x1="125" y1="90" x2="125" y2="160" stroke="#94A3B8" />
+                   <line x1="110" y1="160" x2="140" y2="160" stroke="#94A3B8" />
+                   
+                   {/* Monitor */}
+                   <rect x="120" y="60" width="5" height="30" fill="#CBD5E1" stroke="none" /> 
+                   <rect x="110" y="40" width="25" height="20" rx="2" fill="#E2E8F0" stroke="#94A3B8" />
+                   
+                   {/* Height Indicator */}
+                   <line x1="160" y1="45" x2="160" y2="160" stroke="#F59E0B" strokeDasharray="4 4" />
+                   <line x1="155" y1="45" x2="165" y2="45" stroke="#F59E0B" />
+                   <line x1="155" y1="160" x2="165" y2="160" stroke="#F59E0B" />
+               </svg>
+           </div>
+           <div className="w-full md:w-1/2">
               <h2 className="text-2xl font-bold mb-4">Standing Desk Best Practices</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
                 Standing is great, but don't overdo it. Alternate between sitting and standing every 30-60 minutes. Wear supportive shoes and use an anti-fatigue mat.

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AuthMode } from '../App';
 import { AuthLogoIcon, GoogleIcon, EyeIcon, EyeOffIcon, CloseIcon, LoaderIcon, CheckCircleIcon } from '../components/icons/Icons';
@@ -93,14 +94,36 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode, onLoginSuccess, onSwitchMode,
                 />
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 max-w-6xl w-full">
-                {/* Left decorative panel */}
-                <div className="hidden md:flex flex-col justify-center items-center bg-gray-50 p-8 rounded-l-2xl overflow-hidden"
-                     style={{backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)', backgroundSize: '1.5rem 1.5rem'}}>
-                    <img 
-                        src="https://images.unsplash.com/photo-1621172159021-10253ce54002?q=80&w=1935&auto=format&fit=crop"
-                        alt="Anatomical model of a human spine"
-                        className="w-full h-full object-contain rounded-lg"
-                    />
+                {/* Left decorative panel - Geometric Illustration */}
+                <div className="hidden md:flex flex-col justify-center items-center bg-indigo-50 p-8 rounded-l-2xl overflow-hidden relative">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-20">
+                        <svg className="w-full h-full" width="100%" height="100%">
+                            <defs>
+                                <pattern id="dot-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <circle cx="2" cy="2" r="1" className="text-indigo-900 fill-current" />
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#dot-pattern)" />
+                        </svg>
+                    </div>
+                    
+                    {/* Abstract Spine/Connection Illustration */}
+                    <svg viewBox="0 0 300 400" className="w-64 h-auto text-indigo-600 drop-shadow-xl z-10" fill="none" stroke="currentColor" strokeWidth="2">
+                        {/* Central Spine Line */}
+                        <path d="M150 50 C150 50 200 100 200 150 S150 250 150 250 S100 300 100 350" strokeLinecap="round" strokeLinejoin="round" className="opacity-50"/>
+                        
+                        {/* Nodes */}
+                        <circle cx="150" cy="50" r="8" className="fill-white stroke-indigo-600" strokeWidth="3"/>
+                        <circle cx="200" cy="150" r="8" className="fill-white stroke-indigo-600" strokeWidth="3"/>
+                        <circle cx="150" cy="250" r="8" className="fill-white stroke-indigo-600" strokeWidth="3"/>
+                        <circle cx="100" cy="350" r="8" className="fill-white stroke-indigo-600" strokeWidth="3"/>
+                        
+                        {/* Floating Geometric Decor */}
+                        <rect x="50" y="80" width="40" height="40" rx="8" stroke="#F59E0B" strokeWidth="2" className="opacity-80 animate-bounce" style={{animationDuration: '3s'}}/>
+                        <circle cx="250" cy="280" r="20" stroke="#10B981" strokeWidth="2" className="opacity-80 animate-pulse"/>
+                        <path d="M50 300 L80 330 L50 360" stroke="#EC4899" strokeWidth="2" fill="none" />
+                    </svg>
                 </div>
 
                 {/* Right form panel */}

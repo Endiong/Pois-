@@ -8,20 +8,34 @@ if (!API_KEY) {
 
 export const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
-export const getPostureTip = async (): Promise<string> => {
+export const getPostureTip = async (status: string): Promise<string> => {
   if (!API_KEY) {
-    return "Gemini API key not configured. Please contact support.";
+    // Fallback tips if no API key
+    const tips = [
+      "Keep your feet flat on the floor.",
+      "Ensure your monitor is at eye level.",
+      "Take a deep breath and roll your shoulders back.",
+      "Engage your core slightly to support your lower back."
+    ];
+    return tips[Math.floor(Math.random() * tips.length)];
   }
   
   try {
+    const context = status === 'Good Posture' 
+      ? "The user has good posture right now. Give a NEW and UNIQUE tip on maintaining it or a general ergonomic fact. Do not repeat previous advice." 
+      : `The user is currently ${status}. Give a specific, short correction tip that is different from generic advice.`;
+    
+    // Add a random seed to the prompt to force variety
+    const randomSeed = Math.floor(Math.random() * 10000);
+
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: "Give me a single, short, actionable tip for improving my posture while sitting at a desk. The tip should be concise and easy to follow. Maximum 2 sentences.",
+        contents: `You are a creative posture coach. ${context} The tip must be under 15 words. Random seed: ${randomSeed}. Variations: Humor, Scientific Fact, Direct Command.`,
     });
 
-    return response.text;
+    return response.text || "Keep your spine aligned.";
   } catch (error) {
     console.error("Error fetching posture tip from Gemini:", error);
-    return "Could not fetch a tip at the moment. Please try again later.";
+    return "Remember to take breaks every 30 minutes.";
   }
 };

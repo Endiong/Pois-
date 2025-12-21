@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -14,6 +15,22 @@
             fontFamily: {
               sans: ['Outfit', 'Inter', 'sans-serif'],
             },
+            colors: {
+              // Overriding gray with Neutral (True Gray) to remove blue tint for "Ash" look
+              gray: {
+                50: '#fafafa',
+                100: '#f5f5f5',
+                200: '#e5e5e5',
+                300: '#d4d4d4',
+                400: '#a3a3a3',
+                500: '#737373',
+                600: '#525252',
+                700: '#404040',
+                800: '#262626',
+                900: '#171717',
+                950: '#0a0a0a',
+              }
+            }
           },
         },
       }
@@ -36,7 +53,7 @@
         font-family: 'Outfit', sans-serif;
       }
       .dark body {
-        background-color: #030712;
+        background-color: #0a0a0a; /* Dark Ash/Gray instead of pure black */
       }
       /* Hide scrollbar for sidebar but allow scrolling */
       .no-scrollbar::-webkit-scrollbar {
@@ -45,6 +62,28 @@
       .no-scrollbar {
         -ms-overflow-style: none;
         scrollbar-width: none;
+      }
+      
+      /* Custom Thin Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #d4d4d4; /* gray-300 */
+        border-radius: 10px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background-color: #404040; /* gray-700 */
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #a3a3a3; /* gray-400 */
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background-color: #525252; /* gray-600 */
       }
       
       body::after {
@@ -81,6 +120,19 @@
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
+      }
+
+      /* Logo Blink Animation */
+      .poise-eye {
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .poise-logo:hover .poise-eye {
+        animation: blink 0.35s ease-in-out;
+      }
+      @keyframes blink {
+        0%, 100% { transform: scaleY(1); }
+        50% { transform: scaleY(0.1); }
       }
     </style>
   <script type="importmap">

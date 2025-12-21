@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SparklesIcon, VideoCameraIcon, TrophyIcon, InfoCircleIcon } from '../icons/Icons';
 import { ViewType, PostureHistoryItem } from '../../types';
@@ -49,13 +50,14 @@ const ActivityItem: React.FC<{activity: Activity}> = ({ activity }) => {
 interface ActivityFeedProps {
     onNavigate: (view: ViewType) => void;
     history: PostureHistoryItem[];
+    lastTip: string;
+    currentGoal: number;
 }
 
-const ActivityFeed: React.FC<ActivityFeedProps> = ({ onNavigate, history }) => {
-  // Generate activities based on history + static welcome/tips
+const ActivityFeed: React.FC<ActivityFeedProps> = ({ onNavigate, history, lastTip, currentGoal }) => {
   const activities: Activity[] = [];
 
-  // Add latest session if available
+  // 1. Add latest session if available
   if (history.length > 0) {
       const latest = history[0];
       const score = Math.round((latest.goodDuration / latest.duration) * 100);
@@ -67,32 +69,34 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onNavigate, history }) => {
       });
   }
 
-  // Add static tips/goals to fill the feed
-  activities.push(
-      {
-        type: 'tip',
-        title: 'Atlas sent a tip',
-        description: 'Remember to keep your shoulders relaxed and down, away from your ears.',
-        time: history.length > 0 ? 'Yesterday' : 'Just now',
-      },
-      {
-        type: 'goal',
-        title: 'Weekly Goal',
-        description: 'You are on track to meet your weekly consistency goal.',
-        time: '2 days ago',
-      }
-  );
+  // 2. Add AI Tip (Atlas)
+  // If history exists, we assume a session happened recently, so tip is "Just now" or "Today".
+  // If no history, it's a welcome tip.
+  activities.push({
+    type: 'tip',
+    title: 'Atlas sent a tip',
+    description: lastTip || 'Welcome! Start a live session to receive personalized AI posture coaching.',
+    time: history.length > 0 ? 'Recently' : 'Just now',
+  });
+
+  // 3. Add Goal Status
+  activities.push({
+    type: 'goal',
+    title: 'Posture Goal',
+    description: `You are on track to meet your ${currentGoal}% quality goal.`,
+    time: 'Ongoing',
+  });
 
   return (
     <div className="mt-4">
         {history.length === 0 && (
             <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg flex gap-3 text-sm text-gray-600 dark:text-gray-400">
                 <InfoCircleIcon className="w-5 h-5 flex-shrink-0 text-blue-500" />
-                <p>Start your first live tracking session to see your activity here.</p>
+                <p>Start your first live tracking session to see your activity populate here.</p>
             </div>
         )}
         <div className="space-y-6">
-            {activities.slice(0, 4).map((activity, index) => (
+            {activities.map((activity, index) => (
                 <ActivityItem key={index} activity={activity} />
             ))}
         </div>

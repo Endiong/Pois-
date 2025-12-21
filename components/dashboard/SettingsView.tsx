@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
-import { UserCircleIcon, LockClosedIcon, CheckCircleIcon, UploadIcon, EnvelopeIcon } from '../icons/Icons';
+import { UserCircleIcon, LockClosedIcon, CheckCircleIcon, UploadIcon, EnvelopeIcon, BuildingOfficeIcon, TrashIcon } from '../icons/Icons';
+import { LayoutMode } from '../../types';
 
 interface UserProfile {
     name: string;
@@ -10,9 +12,11 @@ interface UserProfile {
 interface SettingsViewProps {
   profile: UserProfile;
   onUpdateProfile: (newProfile: UserProfile) => void;
+  layoutMode: LayoutMode;
+  onUpdateLayout: (mode: LayoutMode) => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile, layoutMode, onUpdateLayout }) => {
   const [name, setName] = useState(profile.name);
   const [email, setEmail] = useState(profile.email || 'margaret@example.com');
   const [avatar, setAvatar] = useState(profile.avatar);
@@ -35,15 +39,73 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile })
           setAvatar(url);
       }
   };
+  
+  const handleRemoveAvatar = () => {
+      setAvatar('');
+  };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-auto space-y-8 mb-20">
        <header>
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h2>
         <p className="text-gray-500 mt-1">Manage your account preferences and profile.</p>
       </header>
 
       <form onSubmit={handleSave} className="space-y-6">
+         {/* Layout Preference */}
+         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                 <BuildingOfficeIcon /> Interface Layout
+             </h3>
+             <p className="text-sm text-gray-500 mb-4">Choose how you want to navigate the dashboard. Mobile devices will always use the sidebar menu.</p>
+             
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <button
+                    type="button"
+                    onClick={() => onUpdateLayout('sidebar')}
+                    className={`relative p-4 rounded-xl border-2 transition-all text-left flex flex-col gap-3 ${
+                        layoutMode === 'sidebar' 
+                        ? 'border-black dark:border-white bg-gray-50 dark:bg-gray-700/50' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                 >
+                    <div className="flex gap-2">
+                        <div className="w-6 h-full bg-gray-300 dark:bg-gray-600 rounded-sm"></div>
+                        <div className="flex-1 flex flex-col gap-1">
+                            <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-sm"></div>
+                            <div className="h-8 w-full bg-gray-100 dark:bg-gray-800 rounded-sm"></div>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <span className={`font-semibold ${layoutMode === 'sidebar' ? 'text-black dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>Sidebar Navigation</span>
+                        {layoutMode === 'sidebar' && <CheckCircleIcon className="w-5 h-5 text-black dark:text-white" />}
+                    </div>
+                 </button>
+
+                 <button
+                    type="button"
+                    onClick={() => onUpdateLayout('top')}
+                    className={`relative p-4 rounded-xl border-2 transition-all text-left flex flex-col gap-3 ${
+                        layoutMode === 'top' 
+                        ? 'border-black dark:border-white bg-gray-50 dark:bg-gray-700/50' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                 >
+                    <div className="flex flex-col gap-2">
+                        <div className="w-full h-3 bg-gray-300 dark:bg-gray-600 rounded-sm"></div>
+                        <div className="flex-1 h-8 bg-gray-100 dark:bg-gray-800 rounded-sm"></div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                            <span className={`font-semibold ${layoutMode === 'top' ? 'text-black dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>Top Navigation</span>
+                            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wide mt-0.5">Desktop Only</span>
+                        </div>
+                        {layoutMode === 'top' && <CheckCircleIcon className="w-5 h-5 text-black dark:text-white" />}
+                    </div>
+                 </button>
+             </div>
+         </div>
+
          {/* Profile Section */}
          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -53,14 +115,31 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile })
              <div className="flex flex-col sm:flex-row gap-8">
                  {/* Avatar Upload */}
                  <div className="flex flex-col items-center gap-3">
-                    <div className="relative group">
-                        <img src={avatar} alt="Profile" className="w-24 h-24 rounded-full object-cover border-4 border-gray-50 dark:border-gray-700 shadow-sm" />
+                    <div className="relative group w-24 h-24">
+                        {avatar ? (
+                             <img src={avatar} alt="Profile" className="w-full h-full rounded-full object-cover border-4 border-gray-50 dark:border-gray-700 shadow-sm" />
+                        ) : (
+                             <div className="w-full h-full rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center border-4 border-gray-50 dark:border-gray-600">
+                                <UserCircleIcon className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+                             </div>
+                        )}
                         <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                             <UploadIcon className="w-6 h-6 text-white" />
                             <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                         </label>
                     </div>
-                    <span className="text-xs text-gray-500">Click to change</span>
+                    <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-gray-500">Click to change</span>
+                        {avatar && (
+                            <button 
+                                type="button"
+                                onClick={handleRemoveAvatar}
+                                className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                            >
+                                <TrashIcon className="w-3 h-3" /> Remove
+                            </button>
+                        )}
+                    </div>
                  </div>
 
                  {/* Inputs */}
@@ -71,7 +150,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile })
                             type="text" 
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                            className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all"
                         />
                     </div>
                     <div>
@@ -80,11 +159,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile })
                             <input 
                                 type="email" 
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                                disabled
+                                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed transition-all"
                             />
                             <EnvelopeIcon className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
                         </div>
+                        <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
                     </div>
                  </div>
              </div>
@@ -102,7 +182,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile })
                         type="password" 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                        className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all"
                         placeholder="••••••••"
                     />
                  </div>
@@ -112,7 +192,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile })
                         type="password" 
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                        className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all"
                         placeholder="••••••••"
                     />
                  </div>
