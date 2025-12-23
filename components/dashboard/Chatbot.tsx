@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Chat } from '@google/genai';
 import { SendIcon, LoaderIcon, SparklesIcon, PoiséIcon } from '../icons/Icons';
@@ -114,12 +113,7 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-12rem)] max-w-4xl mx-auto">
-        <header className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Chat with Atlas</h1>
-            <p className="text-gray-500 mt-1">Personalized posture advice from your AI coach.</p>
-        </header>
-        
+    <div className="flex flex-col h-[calc(100vh-10rem)] max-w-4xl mx-auto">
         <div className="flex-grow bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden">
             <div className="flex-1 p-6 space-y-6 overflow-y-auto no-scrollbar">
                 {messages.map((message, index) => (

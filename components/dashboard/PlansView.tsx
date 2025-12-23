@@ -6,11 +6,6 @@ interface PlansViewProps {}
 const PlansView: React.FC<PlansViewProps> = () => {
   return (
     <div className="space-y-8">
-      <header className="text-center max-w-2xl mx-auto mb-10">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Upgrade your productivity</h2>
-        <p className="text-gray-500 mt-2">Choose the plan that fits your health goals. Cancel anytime.</p>
-      </header>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
         {/* Free Plan */}

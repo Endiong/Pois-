@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UserCircleIcon, LockClosedIcon, CheckCircleIcon, UploadIcon, EnvelopeIcon, BuildingOfficeIcon, TrashIcon } from '../icons/Icons';
 import { LayoutMode } from '../../types';
@@ -28,7 +27,17 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile, l
     e.preventDefault();
     onUpdateProfile({ name, avatar, email });
     setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Restrict to 12 chars and only alphanumeric + spaces
+      const value = e.target.value;
+      if (value.length <= 12) {
+          // Allow letters, numbers, and spaces only
+          const cleanValue = value.replace(/[^a-zA-Z0-9 ]/g, '');
+          setName(cleanValue);
+      }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,12 +54,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile, l
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 mb-20">
-       <header>
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h2>
-        <p className="text-gray-500 mt-1">Manage your account preferences and profile.</p>
-      </header>
-
+    <div className="max-w-2xl mx-auto space-y-6 mb-20">
       <form onSubmit={handleSave} className="space-y-6">
          {/* Layout Preference */}
          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
@@ -149,9 +153,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile, l
                         <input 
                             type="text" 
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            onChange={handleNameChange}
+                            maxLength={12}
+                            placeholder="Max 12 chars"
                             className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all"
                         />
+                        <p className="text-xs text-gray-400 mt-1">{name.length}/12 characters (Alphanumeric only)</p>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
@@ -200,16 +207,22 @@ const SettingsView: React.FC<SettingsViewProps> = ({ profile, onUpdateProfile, l
          </div>
 
          <div className="flex justify-end gap-4">
-             {isSaved && (
-                 <span className="flex items-center gap-2 text-green-600 animate-in fade-in">
-                     <CheckCircleIcon className="w-5 h-5" /> Saved Successfully
-                 </span>
-             )}
              <button 
                 type="submit"
-                className="bg-black dark:bg-white text-white dark:text-black px-8 py-2.5 rounded-full font-bold hover:opacity-80 transition-opacity shadow-lg"
+                disabled={isSaved}
+                className={`px-8 py-2.5 rounded-full font-bold transition-all shadow-lg flex items-center gap-2 ${
+                    isSaved 
+                    ? 'bg-green-500 text-white hover:bg-green-600 scale-105' 
+                    : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-80'
+                }`}
              >
-                Save Changes
+                {isSaved ? (
+                    <>
+                        <CheckCircleIcon className="w-5 h-5" /> Saved!
+                    </>
+                ) : (
+                    "Save Changes"
+                )}
              </button>
          </div>
       </form>

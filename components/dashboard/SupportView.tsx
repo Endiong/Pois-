@@ -21,12 +21,7 @@ const SupportView: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
-      <header className="text-center mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">How can we help?</h2>
-        <p className="text-gray-500 mt-2">Search our knowledge base or get in touch.</p>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 text-center hover:border-indigo-500 transition-colors cursor-pointer group">
               <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
                   <DocumentTextIcon className="w-6 h-6" />
@@ -52,7 +47,7 @@ const SupportView: React.FC = () => {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-             <h3 className="text-xl font-bold text-gray-900 dark:text-white">Frequently Asked Questions</h3>
+             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Frequently Asked Questions</h3>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {faqs.map((faq, index) => (

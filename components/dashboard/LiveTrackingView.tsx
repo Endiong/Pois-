@@ -1,12 +1,12 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import CameraView from './CameraView';
 import StatsCard from './StatsCard';
-import { BoltIcon, ClockIcon, CheckBadgeIcon, SparklesIcon } from '../icons/Icons';
+import { BoltIcon, ClockIcon, CheckBadgeIcon, PoiséIcon } from '../icons/Icons';
 import { PostureStatus } from '../../types';
 
 interface LiveTrackingViewProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  stream: MediaStream | null;
   postureStatus: PostureStatus;
   isTracking: boolean;
   onToggleTracking: () => void;
@@ -17,7 +17,7 @@ interface LiveTrackingViewProps {
 }
 
 const LiveTrackingView: React.FC<LiveTrackingViewProps> = ({
-  videoRef,
+  stream,
   postureStatus,
   isTracking,
   onToggleTracking,
@@ -26,58 +26,68 @@ const LiveTrackingView: React.FC<LiveTrackingViewProps> = ({
   currentTip,
   isModelReady
 }) => {
+  // Local ref for the UI video element (visible to user)
+  const uiVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Sync the passed stream to the UI video element
+  useEffect(() => {
+    if (uiVideoRef.current) {
+        if (stream) {
+            uiVideoRef.current.srcObject = stream;
+        } else {
+            uiVideoRef.current.srcObject = null;
+        }
+    }
+  }, [stream]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const currentScore = totalSessionSeconds > 0 ? Math.round((goodPostureSeconds / totalSessionSeconds) * 100) : 100;
+  const currentScore = totalSessionSeconds > 0 
+    ? Math.min(100, Math.round((goodPostureSeconds / totalSessionSeconds) * 100)) 
+    : 0;
+
+  const cleanTip = (text: string) => text.replace(/\*\*/g, '').replace(/\*/g, '');
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Live Tracking</h2>
-          <p className="text-gray-500 mt-1">Real-time posture analysis.</p>
-        </div>
-      </header>
-
-      {/* Live Tips Banner - Moved to Top */}
-      <div className="w-full bg-indigo-600 dark:bg-indigo-900 rounded-2xl p-6 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden transition-all duration-500">
-          <div className="absolute top-0 right-0 p-8 opacity-10">
-              <SparklesIcon className="w-32 h-32 transform translate-x-8 -translate-y-8" />
+    <div className="space-y-4">
+      <div className="w-full bg-gradient-to-r from-gray-900 via-gray-800 to-black rounded-xl p-4 text-white shadow-lg shadow-gray-900/20 relative overflow-hidden transition-all duration-500 flex items-center gap-4">
+          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+              <PoiséIcon className="w-16 h-16 transform translate-x-4 -translate-y-4" />
           </div>
-          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full flex-shrink-0">
-                  <SparklesIcon className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                  <h4 className="font-bold text-indigo-100 text-xs uppercase tracking-wider mb-1">AI Coach</h4>
-                  <p className="text-lg font-medium leading-snug">
+          <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg flex-shrink-0">
+              <PoiséIcon className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 relative z-10">
+              <div className="flex items-baseline gap-2">
+                  <span className="font-bold text-gray-400 text-[10px] uppercase tracking-wider">AI Coach</span>
+                  <p className="text-sm font-medium leading-tight">
                     {isTracking 
-                        ? (isModelReady ? currentTip : "Analyzing your posture patterns...") 
+                        ? (isModelReady ? cleanTip(currentTip) : "Analyzing your posture patterns...") 
                         : "Start the camera to receive real-time, personalized posture correction tips."}
                   </p>
               </div>
           </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+        <div className="lg:col-span-2 w-full">
           <CameraView
-            videoRef={videoRef}
+            videoRef={uiVideoRef}
             postureStatus={isModelReady ? postureStatus : PostureStatus.UNKNOWN}
             onToggleCamera={onToggleTracking}
             isCameraEnabled={isTracking}
           />
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3 w-full">
           <StatsCard
             title="Session Score"
-            value={`${currentScore}%`}
+            value={totalSessionSeconds > 0 ? `${currentScore}%` : "--"}
             unit=""
-            trend={currentScore >= 80 ? "Great" : "Improve"}
+            trend={totalSessionSeconds > 0 ? (currentScore >= 80 ? "Great" : "Improve") : "Ready"}
             icon={<BoltIcon className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />}
             iconBg="bg-yellow-100 dark:bg-yellow-900/30"
           />

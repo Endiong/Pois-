@@ -16,9 +16,11 @@ export interface PostureHistoryItem {
   date: string;
   duration: number; // total seconds
   goodDuration: number; // good posture seconds
+  slouchDuration: number; // slouching seconds
+  leanDuration: number; // leaning seconds
 }
 
-export type ViewType = 'home' | 'live' | 'history' | 'chat' | 'goals' | 'reports' | 'settings' | 'plans' | 'badges' | 'support';
+export type ViewType = 'home' | 'tracking' | 'history' | 'chat' | 'goals' | 'reports' | 'settings' | 'plans' | 'badges' | 'support';
 
 export type LayoutMode = 'sidebar' | 'top';
 

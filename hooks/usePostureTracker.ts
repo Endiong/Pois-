@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PostureStatus, PostureHistoryItem } from '../types';
 import { sendNotification, playBeep } from '../services/notificationService';
 
@@ -10,29 +9,36 @@ interface UsePostureTrackerProps {
   onPostureChange: (status: PostureStatus) => void;
   enabled: boolean;
   onSessionEnd: (session: PostureHistoryItem) => void;
+  videoRef: React.RefObject<HTMLVideoElement>; // Now accepts a persistent video ref
 }
 
-const BAD_POSTURE_THRESHOLD_MS = 60000; // 1 minute
+const BAD_POSTURE_NOTIFICATION_DELAY_MS = 10000; // 10 Seconds
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 const MIN_KEYPOINT_SCORE = 0.3;
-const MIN_SESSION_DURATION_SECONDS = 10; // Reduced for testing, can be higher
+const MIN_SESSION_DURATION_SECONDS = 10;
 
-const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostureTrackerProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd, videoRef }: UsePostureTrackerProps) => {
   const detectorRef = useRef<any>(null); 
   const requestRef = useRef<number | undefined>(undefined); 
   const streamRef = useRef<MediaStream | null>(null);
-  const badPostureTimer = useRef<number | null>(null);
-  const lastNotificationTime = useRef<number>(0);
+  
+  // Notification Logic Refs
+  const badPostureStartTimeRef = useRef<number | null>(null);
+  const lastNotificationTimeRef = useRef<number>(0);
+  
   const inactivityTimerRef = useRef<number | null>(null);
 
   const [postureStatus, setPostureStatus] = useState<PostureStatus>(PostureStatus.UNKNOWN);
   const [isModelReady, setIsModelReady] = useState(false);
+  const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
   
-  // Timing State using Refs for accuracy, State for rendering
+  // Timing State using Refs for accuracy
   const sessionStartTimeRef = useRef<number | null>(null);
   const goodPostureDurationRef = useRef<number>(0);
+  const slouchDurationRef = useRef<number>(0);
+  const leanDurationRef = useRef<number>(0);
   
+  // State for rendering
   const [goodPostureSeconds, setGoodPostureSeconds] = useState(0);
   const [totalSessionSeconds, setTotalSessionSeconds] = useState(0);
   
@@ -67,19 +73,42 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
     
     const { left_shoulder, right_shoulder, left_ear, right_ear } = keypoints;
     
-    // 1. Leaning check
+    // Normalize coordinates just in case (MoveNet usually returns pixels or 0-1)
+    // We rely on relative distances.
+
     const shoulderYDiff = Math.abs(left_shoulder.y - right_shoulder.y);
     const shoulderWidth = Math.abs(left_shoulder.x - right_shoulder.x);
-    if (shoulderYDiff > shoulderWidth * 0.15) { 
+    
+    // 1. Leaning check
+    // If one shoulder is significantly higher than the other
+    if (shoulderYDiff > shoulderWidth * 0.20) { 
         return PostureStatus.LEANING;
     }
 
-    // 2. Slouching (Forward Head) check
-    const earAvgX = (left_ear.x + right_ear.x) / 2;
-    const shoulderAvgX = (left_shoulder.x + right_shoulder.x) / 2;
+    // 2. Slouching (Neck Compression) Check
+    // In a front facing camera, slouching usually manifests as the head dropping forward/down
+    // or shoulders shrugging up. This reduces the vertical distance between ears and shoulders.
+    // We compare vertical distance (Y-axis) to shoulder width (X-axis) to be scale-independent.
     
-    if (shoulderAvgX - earAvgX > shoulderWidth * 0.20) { 
+    const avgShoulderY = (left_shoulder.y + right_shoulder.y) / 2;
+    const avgEarY = (left_ear.y + right_ear.y) / 2;
+    
+    // Calculate vertical neck length (Shoulders should be below ears, so Y is higher)
+    const neckLength = avgShoulderY - avgEarY; 
+    
+    // Threshold: If neck length is too short relative to shoulder width, it's a slouch.
+    // A healthy posture usually has a neck visible. Hunching hides the neck.
+    // Adjust 0.25 based on testing. < 0.2 means neck is very short/compressed.
+    if (neckLength < shoulderWidth * 0.20) { 
         return PostureStatus.SLOUCHING;
+    }
+
+    // Alternative Slouch check: Nose too close to shoulder line (if nose exists)
+    if (keypoints['nose']) {
+        const noseY = keypoints['nose'].y;
+        if ((avgShoulderY - noseY) < shoulderWidth * 0.15) {
+             return PostureStatus.SLOUCHING;
+        }
     }
 
     return PostureStatus.GOOD;
@@ -107,13 +136,12 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
       }
     }
     requestRef.current = requestAnimationFrame(runDetection);
-  }, [updatePostureStatus, isModelReady]);
+  }, [updatePostureStatus, isModelReady, videoRef]);
 
   const loadAndRunModel = useCallback(async () => {
     try {
         updatePostureStatus(PostureStatus.UNKNOWN);
         if (!detectorRef.current) {
-            // Using LIGHTNING for faster inference to reduce glitches
             const detectorConfig = { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING };
             const detector = await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, detectorConfig);
             detectorRef.current = detector;
@@ -132,8 +160,6 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
         cancelAnimationFrame(requestRef.current);
         requestRef.current = undefined;
     }
-    // Note: We don't dispose the detector immediately to allow faster restart
-    // detectorRef.current.dispose(); 
     setIsModelReady(false);
   }, []);
 
@@ -144,6 +170,7 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
+      setActiveStream(null);
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null;
@@ -153,11 +180,19 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
     if (sessionStartTimeRef.current) {
         const finalTotalSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
         
+        let finalGoodSeconds = Math.floor(goodPostureDurationRef.current / 1000);
+        const finalSlouchSeconds = Math.floor(slouchDurationRef.current / 1000);
+        const finalLeanSeconds = Math.floor(leanDurationRef.current / 1000);
+
+        if (finalGoodSeconds > finalTotalSeconds) finalGoodSeconds = finalTotalSeconds;
+        
         if (finalTotalSeconds > MIN_SESSION_DURATION_SECONDS) {
             onSessionEnd({
                 date: new Date().toISOString(),
                 duration: finalTotalSeconds,
-                goodDuration: Math.floor(goodPostureDurationRef.current / 1000), // Convert ms to seconds
+                goodDuration: finalGoodSeconds,
+                slouchDuration: finalSlouchSeconds,
+                leanDuration: finalLeanSeconds
             });
         }
     }
@@ -165,10 +200,13 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
     // Reset Refs and State
     sessionStartTimeRef.current = null;
     goodPostureDurationRef.current = 0;
+    slouchDurationRef.current = 0;
+    leanDurationRef.current = 0;
     setTotalSessionSeconds(0);
     setGoodPostureSeconds(0);
+    badPostureStartTimeRef.current = null;
     updatePostureStatus(PostureStatus.UNKNOWN);
-  }, [updatePostureStatus, stopDetection, onSessionEnd]);
+  }, [updatePostureStatus, stopDetection, onSessionEnd, videoRef]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -181,6 +219,7 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
             }
         });
         streamRef.current = stream;
+        setActiveStream(stream);
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -190,15 +229,21 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
               // Initialize Timer
               sessionStartTimeRef.current = Date.now();
               goodPostureDurationRef.current = 0;
+              slouchDurationRef.current = 0;
+              leanDurationRef.current = 0;
           };
         }
-        await Notification.requestPermission();
+        
+        // Request notification permission immediately
+        if ('Notification' in window) {
+            Notification.requestPermission();
+        }
       }
     } catch (error) {
       console.error("Error accessing camera:", error);
       updatePostureStatus(PostureStatus.UNKNOWN);
     }
-  }, [updatePostureStatus, loadAndRunModel]);
+  }, [updatePostureStatus, loadAndRunModel, videoRef]);
   
   // -- Inactivity Timer --
   const resetInactivityTimer = useCallback(() => {
@@ -220,24 +265,52 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
     }
   }, [enabled, resetInactivityTimer]);
 
-  // -- Session Timer Loop --
+  // -- Session Timer Loop & Notification Check --
   useEffect(() => {
     let interval: number | null = null;
 
     if (enabled) {
       interval = window.setInterval(() => {
+        const now = Date.now();
+
+        // 1. Session Timing
         if (sessionStartTimeRef.current) {
-            const now = Date.now();
-            // Calculate elapsed time from start (prevents drift/glitch)
             const elapsed = Math.floor((now - sessionStartTimeRef.current) / 1000);
             setTotalSessionSeconds(elapsed);
 
-            // Accumulate Good Posture Time (in ms for precision)
             if (postureStatusRef.current === PostureStatus.GOOD) {
                 goodPostureDurationRef.current += 1000; 
-                setGoodPostureSeconds(Math.floor(goodPostureDurationRef.current / 1000));
+                badPostureStartTimeRef.current = null; // Reset bad posture timer
+            } else if (postureStatusRef.current === PostureStatus.SLOUCHING) {
+                slouchDurationRef.current += 1000;
+            } else if (postureStatusRef.current === PostureStatus.LEANING) {
+                leanDurationRef.current += 1000;
             }
+            
+            const currentGood = Math.floor(goodPostureDurationRef.current / 1000);
+            setGoodPostureSeconds(Math.min(currentGood, elapsed));
         }
+
+        // 2. Bad Posture Notification Logic
+        if (postureStatusRef.current === PostureStatus.SLOUCHING || postureStatusRef.current === PostureStatus.LEANING) {
+            if (badPostureStartTimeRef.current === null) {
+                badPostureStartTimeRef.current = now;
+            } else {
+                const badDuration = now - badPostureStartTimeRef.current;
+                
+                // If bad posture persists for > 10 seconds AND we haven't notified recently
+                if (badDuration > BAD_POSTURE_NOTIFICATION_DELAY_MS) {
+                    if (now - lastNotificationTimeRef.current > 60000) { // Don't spam: wait 1 min between notifications
+                        sendNotification('Posture Alert', `You've been ${postureStatusRef.current.toLowerCase()} for a while. Please sit up straight!`);
+                        playBeep();
+                        lastNotificationTimeRef.current = now;
+                    }
+                }
+            }
+        } else {
+            badPostureStartTimeRef.current = null;
+        }
+
       }, 1000);
     }
 
@@ -246,40 +319,23 @@ const usePostureTracker = ({ onPostureChange, enabled, onSessionEnd }: UsePostur
     };
   }, [enabled]);
 
-  // -- Notification Logic --
-  useEffect(() => {
-    if (postureStatus === PostureStatus.SLOUCHING || postureStatus === PostureStatus.LEANING) {
-      if (badPostureTimer.current === null) {
-        badPostureTimer.current = window.setTimeout(() => {
-          const now = Date.now();
-          if (now - lastNotificationTime.current > 120000) { 
-            sendNotification('Posture Alert!', 'Please check your posture.');
-            playBeep();
-            lastNotificationTime.current = now;
-          }
-        }, BAD_POSTURE_THRESHOLD_MS);
-      }
-    } else {
-      if (badPostureTimer.current) {
-        clearTimeout(badPostureTimer.current);
-        badPostureTimer.current = null;
-      }
-    }
-    return () => {
-        if (badPostureTimer.current) clearTimeout(badPostureTimer.current);
-    };
-  }, [postureStatus]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Clean up stream but don't call full stopCamera to avoid state updates on unmounted component
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     };
   }, []);
 
-  return { videoRef, postureStatus, startCamera, stopCamera, goodPostureSeconds, totalSessionSeconds, isModelReady };
+  return { 
+      postureStatus, 
+      startCamera, 
+      stopCamera, 
+      goodPostureSeconds, 
+      totalSessionSeconds, 
+      isModelReady,
+      activeStream // Expose stream for UI components
+  };
 };
 
 export default usePostureTracker;

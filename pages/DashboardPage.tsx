@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import CameraView from '../components/dashboard/CameraView';
 import AnalyticsChart from '../components/dashboard/AnalyticsChart';
 import StatsCard from '../components/dashboard/StatsCard';
 import ActivityFeed from '../components/dashboard/GeminiTip';
@@ -14,29 +12,30 @@ import PlansView from '../components/dashboard/PlansView';
 import BadgesView from '../components/dashboard/BadgesView';
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap';
 import OnboardingModal from '../components/dashboard/OnboardingModal';
+import BadgePopup from '../components/dashboard/BadgePopup'; 
 import usePostureTracker from '../hooks/usePostureTracker';
-import { ViewType, PostureHistoryItem, LayoutMode } from '../types';
+import { ViewType, PostureHistoryItem, LayoutMode, PostureStatus } from '../types';
 import Chatbot from '../components/dashboard/Chatbot';
 import { getPostureTip } from '../services/geminiService';
 import { 
   HomeIcon, VideoCameraIcon, SettingsIcon, LogoutIcon, 
-  ClockIcon, CheckBadgeIcon, BellIcon,
+  ClockIcon, CheckBadgeIcon, 
   MoonIcon, SunIcon, PoiséIcon, ChevronDownIcon,
-  ChatBubbleIcon, ChevronLeftIcon, ChevronRightIcon,
-  TrophyIcon, HeadphonesIcon,
-  BoltIcon, FireIcon, MedalIcon, ReportsIcon, ChartBarSquareIcon, ArrowRightIcon,
-  UserCheckIcon, TargetIcon, CloseIcon, UserCircleIcon, SparklesIcon
+  ChatBubbleIcon, HeadphonesIcon,
+  BoltIcon, FireIcon, ReportsIcon, ChartBarSquareIcon,
+  TargetIcon, CloseIcon, UserCircleIcon, SparklesIcon, InfoCircleIcon
 } from '../components/icons/Icons';
 import { loadState, saveState } from '../utils/storage';
 
 const GOAL_STORAGE_KEY = 'poise-daily-goal';
 const SESSION_GOAL_STORAGE_KEY = 'poise-session-goal';
-const FOCUS_AREA_STORAGE_KEY = 'poise-focus-area';
+const FOCUS_AREA_STORAGE_KEY = 'poise-focus-area'; // Now used for Sensitivity
 const HISTORY_STORAGE_KEY = 'poise-session-history';
 const USER_PROFILE_KEY = 'poise-user-profile';
 const ONBOARDING_COMPLETED_KEY = 'poise-onboarding-completed';
 const LAYOUT_PREF_KEY = 'poise-layout-preference';
 const LATEST_TIP_KEY = 'poise-latest-tip';
+const BADGES_KEY = 'poise-unlocked-badges';
 
 type Theme = 'light' | 'dark';
 type UserProfile = {
@@ -65,47 +64,136 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
     email: 'margaret@example.com'
   });
   
-  const [dailyGoal, setDailyGoal] = useState<number>(() => loadState(GOAL_STORAGE_KEY) || 60); // Posture Score Goal
-  const [dailySessionGoal, setDailySessionGoal] = useState<number>(() => loadState(SESSION_GOAL_STORAGE_KEY) || 2); // Hours Goal
-  const [focusArea, setFocusArea] = useState<string>(() => loadState(FOCUS_AREA_STORAGE_KEY) || 'Spine Neutral');
+  const [dailyGoal, setDailyGoal] = useState<number>(() => loadState(GOAL_STORAGE_KEY) || 60); 
+  const [dailySessionGoal, setDailySessionGoal] = useState<number>(() => loadState(SESSION_GOAL_STORAGE_KEY) || 2); 
+  const [sensitivity, setSensitivity] = useState<string>(() => loadState(FOCUS_AREA_STORAGE_KEY) || 'Medium');
 
   const [history, setHistory] = useState<PostureHistoryItem[]>(() => loadState(HISTORY_STORAGE_KEY) || []);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => loadState(ONBOARDING_COMPLETED_KEY) || false);
   const [lastTip, setLastTip] = useState<string>(() => loadState(LATEST_TIP_KEY) || "Align your ears with your shoulders.");
   
+  // Badge State
+  const [unlockedBadges, setUnlockedBadges] = useState<string[]>(() => loadState(BADGES_KEY) || ['onboarding_explorer']);
+  const [newlyUnlockedBadge, setNewlyUnlockedBadge] = useState<{name: string, desc: string, icon: React.ReactNode} | null>(null);
+
   const [isTracking, setIsTracking] = useState(false);
   const [liveTip, setLiveTip] = useState<string>(lastTip);
+  const [shouldAutoStart, setShouldAutoStart] = useState(false);
+
+  // PERSISTENT VIDEO REF for AI Model
+  const hiddenVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Helper to check for new badges based on updated history
+  const checkBadges = (currentHistory: PostureHistoryItem[], currentBadges: string[]) => {
+      const newBadges: string[] = [];
+      let latestBadgeInfo = null;
+
+      // 1. First Steps
+      if (currentHistory.length >= 1 && !currentBadges.includes('first_steps')) {
+          newBadges.push('first_steps');
+          latestBadgeInfo = { name: 'First Steps', desc: 'Completed your first session!', icon: <VideoCameraIcon /> };
+      }
+
+      // 2. Marathoner
+      const lastSession = currentHistory[0];
+      if (lastSession && lastSession.duration > 4 * 3600 && !currentBadges.includes('marathoner')) {
+          newBadges.push('marathoner');
+          latestBadgeInfo = { name: 'Marathoner', desc: 'Tracked for over 4 hours!', icon: <ClockIcon /> };
+      }
+
+      // 3. Perfectionist
+      if (lastSession) {
+          const score = (lastSession.goodDuration / lastSession.duration) * 100;
+          if (score >= 95 && lastSession.duration > 3600 && !currentBadges.includes('perfectionist')) {
+              newBadges.push('perfectionist');
+              latestBadgeInfo = { name: 'Perfectionist', desc: 'Maintained 95% posture for 1 hour!', icon: <SparklesIcon /> };
+          }
+      }
+
+      // 4. On Fire
+      if (!currentBadges.includes('on_fire')) {
+          const uniqueDates = new Set(currentHistory.map(h => new Date(h.date).toDateString()));
+          if (uniqueDates.size >= 3) {
+               newBadges.push('on_fire');
+               latestBadgeInfo = { name: 'On Fire', desc: 'Reached a 3-day streak!', icon: <FireIcon /> };
+          }
+      }
+
+      if (newBadges.length > 0) {
+          const updatedBadges = [...currentBadges, ...newBadges];
+          setUnlockedBadges(updatedBadges);
+          saveState(BADGES_KEY, updatedBadges);
+          if (latestBadgeInfo) {
+              setNewlyUnlockedBadge(latestBadgeInfo);
+          }
+      }
+  };
 
   const handleSessionEnd = (session: PostureHistoryItem) => {
     const newHistory = [session, ...history];
     setHistory(newHistory);
     saveState(HISTORY_STORAGE_KEY, newHistory);
+    checkBadges(newHistory, unlockedBadges);
   };
 
-  const { videoRef, postureStatus, startCamera, stopCamera, goodPostureSeconds, totalSessionSeconds, isModelReady } = usePostureTracker({
+  // HOOK NOW USES HIDDEN VIDEO REF
+  const { postureStatus, startCamera, stopCamera, goodPostureSeconds, totalSessionSeconds, isModelReady, activeStream } = usePostureTracker({
     onPostureChange: (status) => {},
     enabled: isTracking,
-    onSessionEnd: handleSessionEnd
+    onSessionEnd: handleSessionEnd,
+    videoRef: hiddenVideoRef 
   });
+
+  // Handle immediate session start when navigating via "Start First Session"
+  useEffect(() => {
+    if (activeView === 'tracking' && shouldAutoStart) {
+        const timer = setTimeout(() => {
+            if (!isTracking) {
+                startCamera();
+                setIsTracking(true);
+            }
+            setShouldAutoStart(false);
+        }, 300);
+        return () => clearTimeout(timer);
+    }
+  }, [activeView, shouldAutoStart, isTracking, startCamera]);
+
+  const handleStartLiveSession = () => {
+      setActiveView('tracking');
+      setShouldAutoStart(true);
+  };
 
   // Dynamic Tip Rotation
   useEffect(() => {
-    let interval: number;
-    if (isTracking && isModelReady) {
-        // Fetch a new tip every 30 seconds or when status changes to bad
-        const updateTip = async () => {
-             const tip = await getPostureTip(postureStatus);
-             setLiveTip(tip);
-             setLastTip(tip); // Update the global dashboard state
-             saveState(LATEST_TIP_KEY, tip); // Persist
-        };
-        
-        // Initial fetch
-        updateTip();
+    let timeoutId: number;
 
-        interval = window.setInterval(updateTip, 30000); 
+    const fetchTip = async () => {
+        if (!isTracking) return;
+
+        const tip = await getPostureTip(postureStatus);
+        setLiveTip(tip);
+        setLastTip(tip);
+        saveState(LATEST_TIP_KEY, tip);
+        
+        let nextFetchDelay = 30000;
+        if (postureStatus === PostureStatus.GOOD) {
+            nextFetchDelay = 60000;
+        } else if (postureStatus === PostureStatus.UNKNOWN || postureStatus === PostureStatus.IDLE) {
+            nextFetchDelay = 10000; 
+        } else {
+            nextFetchDelay = 15000; 
+        }
+
+        timeoutId = window.setTimeout(fetchTip, nextFetchDelay);
+    };
+
+    const initialDelay = postureStatus === PostureStatus.GOOD ? 2000 : 500;
+    
+    if (isTracking && isModelReady) {
+        timeoutId = window.setTimeout(fetchTip, initialDelay);
     }
-    return () => clearInterval(interval);
+
+    return () => clearTimeout(timeoutId);
   }, [isTracking, isModelReady, postureStatus]);
 
   const toggleTracking = () => {
@@ -133,9 +221,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
       saveState(SESSION_GOAL_STORAGE_KEY, newGoal);
   };
   
-  const handleSetFocusArea = (area: string) => {
-      setFocusArea(area);
-      saveState(FOCUS_AREA_STORAGE_KEY, area);
+  const handleSetSensitivity = (level: string) => {
+      setSensitivity(level);
+      saveState(FOCUS_AREA_STORAGE_KEY, level);
   }
 
   const handleUpdateLayout = (mode: LayoutMode) => {
@@ -147,13 +235,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
       setHasCompletedOnboarding(true);
       saveState(ONBOARDING_COMPLETED_KEY, true);
       setActiveView('home');
-  };
-
-  const handleClearHistory = () => {
-      if(window.confirm("Are you sure you want to clear your history?")) {
-          setHistory([]);
-          saveState(HISTORY_STORAGE_KEY, []);
-      }
   };
 
   useEffect(() => {
@@ -180,28 +261,37 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
       setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  // Calculate Sessions Completed Today (including current live session)
-  const sessionsCompletedToday = useMemo(() => {
+  const timeTrackedToday = useMemo(() => {
       const today = new Date().toDateString();
       const historySeconds = history
           .filter(h => new Date(h.date).toDateString() === today)
           .reduce((sum, h) => sum + h.duration, 0);
       
       const totalSeconds = historySeconds + totalSessionSeconds;
-      return (totalSeconds / 3600).toFixed(1); // 1 Session = 1 Hour
+      
+      if (totalSeconds < 3600) {
+          const mins = Math.floor(totalSeconds / 60);
+          return { value: mins, unit: 'mins', rawHours: totalSeconds / 3600 };
+      }
+      
+      return { value: (totalSeconds / 3600).toFixed(1), unit: 'hrs', rawHours: totalSeconds / 3600 };
   }, [history, totalSessionSeconds]);
 
-  // Calculate Streak
   const currentStreak = useMemo(() => {
     if (history.length === 0) return 0;
     
-    // Get unique dates from history in YYYY-MM-DD format
+    // Only count sessions > 3 minutes (180 seconds) for streak
+    const MIN_STREAK_DURATION = 180; 
+
+    const validHistory = history.filter(h => h.duration >= MIN_STREAK_DURATION);
+    if (validHistory.length === 0) return 0;
+
     const uniqueDates = (Array.from(new Set(
-        history.map(h => {
+        validHistory.map(h => {
             const d = new Date(h.date);
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         })
-    )) as string[]).sort().reverse(); // Sort descending
+    )) as string[]).sort().reverse(); 
     
     if (uniqueDates.length === 0) return 0;
 
@@ -212,6 +302,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
     const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
 
     const latestDate = uniqueDates[0];
+    
+    // If we haven't tracked today or yesterday, streak is broken (unless currently tracking)
     if (latestDate !== todayStr && latestDate !== yesterdayStr && !isTracking) {
         return 0;
     }
@@ -235,9 +327,62 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
     return streak;
   }, [history, isTracking]);
 
+  const weeklyImprovement = useMemo(() => {
+      if (history.length === 0) return null;
+
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+      const thisWeekSessions = history.filter(h => new Date(h.date) >= oneWeekAgo);
+      const lastWeekSessions = history.filter(h => new Date(h.date) >= twoWeeksAgo && new Date(h.date) < oneWeekAgo);
+
+      if (thisWeekSessions.length === 0 || lastWeekSessions.length === 0) {
+          return null;
+      }
+
+      const getAvgScore = (sessions: PostureHistoryItem[]) => {
+          if (sessions.length === 0) return 0;
+          const totalScore = sessions.reduce((acc, sess) => acc + (sess.goodDuration / sess.duration), 0);
+          return (totalScore / sessions.length) * 100;
+      };
+
+      const thisWeekAvg = getAvgScore(thisWeekSessions);
+      const lastWeekAvg = getAvgScore(lastWeekSessions);
+
+      const diff = Math.round(thisWeekAvg - lastWeekAvg);
+      return diff;
+  }, [history]);
+
+  const getWelcomeMessage = () => {
+      const firstName = profile.name.split(' ')[0];
+      if (history.length === 0) {
+          return {
+              title: `Welcome, ${firstName}!`,
+              subtitle: "Let's calibrate your environment."
+          };
+      }
+      let subtitle = "Keep tracking to unlock weekly trends.";
+      if (weeklyImprovement !== null) {
+          if (weeklyImprovement > 0) {
+              subtitle = `Your posture improved by ${weeklyImprovement}% this week.`;
+          } else if (weeklyImprovement < 0) {
+              subtitle = `Score dropped by ${Math.abs(weeklyImprovement)}% this week.`;
+          } else {
+              subtitle = "Your score has remained stable.";
+          }
+      }
+      return {
+          title: `Hi, ${firstName} 👋`,
+          subtitle: subtitle
+      };
+  };
+
+  const welcomeText = getWelcomeMessage();
+
   const mainNavItems = [
     { id: 'home', label: 'Dashboard', icon: <HomeIcon /> },
-    { id: 'live', label: 'Live', icon: <VideoCameraIcon /> },
+    { id: 'tracking', label: 'Tracking', icon: <VideoCameraIcon /> }, // Renamed from Live
     { id: 'history', label: 'History', icon: <ChartBarSquareIcon /> },
     { id: 'chat', label: 'Atlas', icon: <ChatBubbleIcon /> },
     { id: 'goals', label: 'Goals', icon: <TargetIcon /> }, 
@@ -248,7 +393,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   const getPageTitle = (view: ViewType) => {
       switch(view) {
           case 'home': return 'Dashboard';
-          case 'live': return 'Live Tracking';
+          case 'tracking': return 'Tracking Session';
           case 'history': return 'Session History';
           case 'chat': return 'Atlas AI Coach';
           case 'goals': return 'Goals & Targets';
@@ -269,22 +414,61 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
     </div>
   );
 
+  // Truncate name logic
+  const getDisplayName = (name: string) => {
+      if (name.length > 12) {
+          return name.substring(0, 12) + '...';
+      }
+      return name;
+  }
+
+  // Streak Tooltip Content
+  const StreakDisplay = ({ streak }: { streak: number }) => (
+      <div className="group relative flex items-center gap-1.5 px-3 py-1 bg-orange-100 dark:bg-orange-900/30 rounded-full cursor-help">
+          <FireIcon className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+          <span className="text-sm font-bold text-orange-700 dark:text-orange-300">{streak}</span>
+          
+          {/* Tooltip */}
+          <div className="absolute top-full right-0 mt-2 w-48 p-2 bg-black text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              <p>Track for at least 3 minutes to increase your streak.</p>
+          </div>
+      </div>
+  );
+
   return (
     <div className={`h-[100dvh] bg-gray-50 dark:bg-gray-950 transition-colors duration-300 font-sans ${theme} ${showSidebarDesktop ? 'flex overflow-hidden' : 'block overflow-auto'}`}>
        
+       {/* ============ HIDDEN PERSISTENT VIDEO ELEMENT ============ */}
+       {/* This video element is always rendered, ensuring TensorFlow MoveNet maintains session state */}
+       <video 
+          ref={hiddenVideoRef} 
+          autoPlay 
+          muted 
+          playsInline 
+          width="640" 
+          height="480" 
+          className="fixed top-0 left-0 opacity-0 pointer-events-none -z-50"
+       />
+
+       {/* Badge Popup */}
+       {newlyUnlockedBadge && (
+           <BadgePopup 
+                badgeName={newlyUnlockedBadge.name}
+                badgeDescription={newlyUnlockedBadge.desc}
+                badgeIcon={newlyUnlockedBadge.icon}
+                onClose={() => setNewlyUnlockedBadge(null)}
+           />
+       )}
+
        {/* ==================== MOBILE HEADER ==================== */}
-       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 h-16 flex items-center justify-between shadow-sm">
+       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 h-14 flex items-center justify-between shadow-sm">
            <div className="flex items-center gap-2 text-gray-900 dark:text-white">
                <PoiséIcon className="w-8 h-8" />
                <span className="text-xl font-logo font-bold">poisé</span>
            </div>
            
            <div className="flex items-center gap-3">
-               {/* Persistent Mobile Streak */}
-               <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-100 dark:bg-orange-900/30 rounded-full">
-                   <FireIcon className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                   <span className="text-sm font-bold text-orange-700 dark:text-orange-300">{currentStreak}</span>
-               </div>
+               <StreakDisplay streak={currentStreak} />
 
                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200">
                    {isMobileMenuOpen ? <CloseIcon /> : (
@@ -299,27 +483,34 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
        </div>
 
        {/* ==================== SIDEBAR ==================== */}
+       {/* Backdrop for mobile */}
+       {isMobileMenuOpen && (
+           <div 
+             className="fixed inset-0 bg-black/50 z-30 md:hidden"
+             onClick={() => setIsMobileMenuOpen(false)}
+           />
+       )}
+       
        <aside className={`
             fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transform transition-transform duration-300 ease-in-out flex flex-col
             ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
             ${showSidebarDesktop ? 'md:translate-x-0 md:static md:h-screen' : 'md:hidden'}
-            mt-16 md:mt-0 shadow-2xl md:shadow-none
+            mt-14 md:mt-0 shadow-2xl md:shadow-none
        `}>
-          <div className="h-20 flex items-center justify-between px-6 border-b border-gray-100 dark:border-gray-800 hidden md:flex text-gray-900 dark:text-white">
+          {/* ... sidebar content ... */}
+          <div className="h-14 flex items-center justify-between px-6 border-b border-gray-100 dark:border-gray-800 hidden md:flex text-gray-900 dark:text-white">
               <div className="flex items-center">
-                <PoiséIcon className="w-8 h-8 mr-3" />
-                <span className="text-2xl font-logo tracking-tight">poisé</span>
+                <PoiséIcon className="w-7 h-7 mr-3" />
+                <span className="text-xl font-logo tracking-tight">poisé</span>
               </div>
           </div>
 
           <nav className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1 custom-scrollbar">
-              {/* Removed Sidebar Streak Card as requested */}
-
               {mainNavItems.map(item => (
                   <button
                       key={item.id}
                       onClick={() => { setActiveView(item.id as ViewType); setIsMobileMenuOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+                      className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                           ${activeView === item.id 
                               ? 'bg-black text-white shadow-lg shadow-gray-200/50 dark:shadow-none dark:bg-white dark:text-black' 
                               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200'
@@ -335,7 +526,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
 
               <button
                   onClick={() => { setActiveView('support'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                       ${activeView === 'support' 
                           ? 'bg-black text-white shadow-lg shadow-gray-200/50 dark:shadow-none dark:bg-white dark:text-black' 
                           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200'
@@ -349,7 +540,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
               <div className="mt-auto pt-4">
                   <div 
                     onClick={() => { setActiveView('plans'); setIsMobileMenuOpen(false); }}
-                    className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-4 text-white relative overflow-hidden group cursor-pointer shadow-lg hover:shadow-indigo-500/30 transition-all hover:scale-[1.02]"
+                    className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-4 text-white relative overflow-hidden group cursor-pointer shadow-lg hover:shadow-indigo-500/30 transition-all hover:scale-[1.02]"
                   >
                       <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
                           <BoltIcon className="w-24 h-24 transform translate-x-4 -translate-y-4" />
@@ -358,9 +549,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                           <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mb-3 backdrop-blur-sm">
                               <BoltIcon className="w-5 h-5 text-white" />
                           </div>
-                          <h4 className="font-bold text-lg mb-1">Upgrade to Pro</h4>
-                          <p className="text-indigo-100 text-xs mb-3">Unlock unlimited tracking & advanced insights.</p>
-                          <button className="text-xs font-bold bg-white text-indigo-600 px-3 py-2 rounded-lg w-full hover:bg-indigo-50 transition-colors">
+                          <h4 className="font-bold text-sm mb-1">Upgrade to Pro</h4>
+                          <p className="text-indigo-100 text-[10px] mb-3">Unlock unlimited tracking & advanced insights.</p>
+                          <button className="text-[10px] font-bold bg-white text-indigo-600 px-3 py-1.5 rounded-lg w-full hover:bg-indigo-50 transition-colors">
                               View Plans
                           </button>
                       </div>
@@ -372,13 +563,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
               <div className="flex items-center gap-3 mb-4 px-2">
                    <div className="relative">
                        {profile.avatar ? (
-                         <img src={profile.avatar} alt="Profile" className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-700 object-cover" />
+                         <img src={profile.avatar} alt="Profile" className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 object-cover" />
                        ) : (
-                         <AvatarPlaceholder className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-700" />
+                         <AvatarPlaceholder className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700" />
                        )}
                    </div>
                    <div className="flex-1 min-w-0">
-                       <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{profile.name}</p>
+                       <p className="text-sm font-bold text-gray-900 dark:text-white truncate" title={profile.name}>
+                           {getDisplayName(profile.name)}
+                       </p>
                        <p className="text-xs text-gray-500 truncate">{profile.email}</p>
                    </div>
               </div>
@@ -401,51 +594,50 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
           </div>
        </aside>
 
-       {/* ==================== TOP NAV (Desktop - Icon Only) ==================== */}
+       {/* ==================== TOP NAV (Desktop - Icon + Labels) ==================== */}
        {!showSidebarDesktop && (
-           <header className="hidden md:block sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
-              <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="flex items-center justify-between h-16">
-                      <div className="flex items-center gap-2 cursor-pointer text-gray-900 dark:text-white" onClick={() => setActiveView('home')}>
+           <header className="hidden md:block sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-14">
+              <div className="w-full max-w-6xl mx-auto px-6">
+                  <div className="relative flex items-center justify-between h-14">
+                      {/* Logo Section */}
+                      <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer text-gray-900 dark:text-white" onClick={() => setActiveView('home')}>
                           <PoiséIcon className="w-8 h-8" />
                           <span className="text-2xl font-logo tracking-tight">poisé</span>
                       </div>
 
-                      <nav className="flex items-center space-x-1">
+                      {/* Navigation - Absolutely Centered */}
+                      <nav className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center space-x-1">
                           {mainNavItems.map(item => (
                               <button
                                   key={item.id}
                                   onClick={() => setActiveView(item.id as ViewType)}
                                   className={`
-                                      group relative flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200
+                                      flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200
                                       ${activeView === item.id 
-                                          ? 'text-gray-900 bg-gray-100 dark:text-white dark:bg-gray-800' 
+                                          ? 'text-gray-900 bg-gray-100 dark:text-black dark:bg-white' 
                                           : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800/50'
                                       }
                                   `}
                               >
-                                  <span className="w-5 h-5">{item.icon}</span>
-                                  
-                                  {/* Tooltip */}
-                                  <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                                      {item.label}
-                                  </span>
+                                  <span className="flex items-center justify-center w-4 h-4">{item.icon}</span>
+                                  <span className="text-xs font-bold leading-none mt-0.5">{item.label}</span>
                               </button>
                           ))}
                       </nav>
 
-                      <div className="flex items-center gap-3">
-                          {/* Desktop Top Nav Streak */}
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 mr-2">
-                              <FireIcon className="w-4 h-4 text-orange-500" />
-                              <span className="text-sm font-bold text-orange-700 dark:text-orange-300">{currentStreak}</span>
+                      {/* Right Action Section */}
+                      <div className="flex-shrink-0 flex items-center gap-3">
+                          {/* Top Navigation Streak */}
+                          <div className="mr-2">
+                             <StreakDisplay streak={currentStreak} />
                           </div>
 
                           <button onClick={toggleTheme} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                              {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+                              {theme === 'light' ? <MoonIcon className="w-5 h-5"/> : <SunIcon className="w-5 h-5"/>}
                           </button>
                           
                           <div className="relative" ref={profileMenuRef}>
+                              {/* ... profile dropdown ... */}
                               <button 
                                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                                 className="flex items-center gap-2 pl-2 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors p-1"
@@ -461,7 +653,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                               {isProfileMenuOpen && (
                                   <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
                                       <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                                          <p className="text-sm font-medium text-gray-900 dark:text-white">{profile.name}</p>
+                                          <p className="text-sm font-medium text-gray-900 dark:text-white" title={profile.name}>{getDisplayName(profile.name)}</p>
                                           <p className="text-xs text-gray-500 truncate">{profile.email}</p>
                                       </div>
                                       <div className="py-1">
@@ -490,147 +682,157 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
        )}
 
        {/* Main Content Area */}
-       <main className={`flex-1 flex flex-col min-w-0 overflow-hidden h-full ${showSidebarDesktop ? 'md:pt-0' : ''} pt-16`}>
+       <main className={`flex-1 flex flex-col min-w-0 overflow-hidden h-full ${!showSidebarDesktop ? '' : 'md:pt-0'} pt-14`}>
              
+             {/* Sticky Header - COMPACT - ONLY FOR MOBILE OR SIDEBAR MODE ICONS */}
              {(showSidebarDesktop || isMobileMenuOpen === false) && (
-                 <header className={`flex justify-between items-center px-6 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm sticky top-0 z-30 border-b border-transparent ${!showSidebarDesktop ? 'md:hidden' : ''}`}>
-                      <div>
-                          {/* Dynamic Page Title */}
+                 <header className={`flex justify-between items-center px-6 h-14 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-30 border-b border-gray-100 dark:border-gray-800 ${!showSidebarDesktop ? 'md:hidden' : ''}`}>
+                      <div className="flex items-center gap-2">
                           <div className="animate-in fade-in slide-in-from-left-2">
-                              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{getPageTitle(activeView)}</h1>
+                              <h1 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">{getPageTitle(activeView)}</h1>
                           </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                           {/* Desktop Sidebar Streak Indicator */}
                           {showSidebarDesktop && (
-                             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 mr-2">
-                                <FireIcon className="w-4 h-4 text-orange-500" />
-                                <span className="text-sm font-bold text-orange-700 dark:text-orange-300">{currentStreak}</span>
+                             <div className="hidden md:block mr-2">
+                                <StreakDisplay streak={currentStreak} />
                              </div>
                           )}
 
                           <button onClick={toggleTheme} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                              {theme === 'light' ? <MoonIcon /> : <SunIcon />}
-                          </button>
-                          <button className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors relative">
-                              <BellIcon className="w-6 h-6" />
-                              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                              {theme === 'light' ? <MoonIcon className="w-5 h-5"/> : <SunIcon className="w-5 h-5"/>}
                           </button>
                       </div>
                  </header>
              )}
 
-             <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth pb-20">
-                 {/* Updated max-width for better horizontal scaling */}
-                 <div className={`mx-auto space-y-8 animate-in fade-in duration-500 ${!showSidebarDesktop ? 'w-full max-w-[1600px] px-2 md:px-6' : 'max-w-7xl'}`}>
+             <div className="flex-1 overflow-y-auto p-4 lg:p-6 scroll-smooth pb-20">
+                 {/* Standardized max-width wrapper for consistent alignment */}
+                 <div className={`mx-auto space-y-6 animate-in fade-in duration-500 ${!showSidebarDesktop ? 'max-w-6xl' : 'max-w-6xl'}`}>
                      {activeView === 'home' && (
-                         <div className="space-y-8">
-                             {/* Hero Welcome & Streak Section */}
-                             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
-                                {/* Welcome Card */}
-                                <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-center">
-                                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">Welcome back, {profile.name.split(' ')[0]} 👋</h1>
-                                    <p className="text-gray-500 dark:text-gray-400 mt-3 text-lg">Ready to improve your posture today?</p>
+                         <div className="space-y-6">
+                             {/* Reduced Header Area - Welcome Message Only */}
+                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{welcomeText.title}</h1>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{welcomeText.subtitle}</p>
                                 </div>
+                             </div>
 
-                                {/* The Hero Streak Card */}
-                                <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl p-8 shadow-lg text-white relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 flex flex-col justify-center min-h-[160px]">
-                                     <div className="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4 transition-transform group-hover:scale-110 duration-700">
-                                        <FireIcon className="w-40 h-40" />
+                             {/* CONDITIONAL DASHBOARD CONTENT */}
+                             {history.length === 0 ? (
+                                 /* NEW USER DASHBOARD VIEW */
+                                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                                     {/* Significantly Compacted Getting Started Banner */}
+                                     <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                                         <div className="absolute top-0 right-0 p-8 opacity-10">
+                                            <PoiséIcon className="w-32 h-32 transform translate-x-4 -translate-y-4" />
+                                         </div>
+                                         <div className="relative z-10 max-w-xl">
+                                             <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-xs font-medium mb-4">
+                                                 <SparklesIcon className="w-3 h-3" />
+                                                 <span>Getting Started</span>
+                                             </div>
+                                             <h2 className="text-2xl font-bold mb-3 leading-tight">Your journey to better posture starts now.</h2>
+                                             <p className="text-indigo-100 text-sm mb-6 leading-relaxed max-w-lg">
+                                                 Poisé learns your habits over time. Complete a short calibration to get your baseline.
+                                             </p>
+                                             <button 
+                                                onClick={handleStartLiveSession}
+                                                className="bg-white text-indigo-600 px-6 py-2.5 rounded-full font-bold hover:bg-indigo-50 transition-all shadow-lg flex items-center gap-2 text-sm transform hover:scale-105"
+                                             >
+                                                <VideoCameraIcon className="w-4 h-4" /> Start First Session
+                                             </button>
+                                         </div>
                                      </div>
-                                     <div className="relative z-10">
-                                        <div className="flex items-center gap-2 mb-2 opacity-90">
-                                            <FireIcon className="w-5 h-5 animate-pulse" />
-                                            <span className="text-sm font-bold uppercase tracking-wider">Current Streak</span>
-                                        </div>
-                                        <div className="text-6xl font-black tracking-tight">{currentStreak} <span className="text-2xl font-medium opacity-80">Days</span></div>
+
+                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                                             <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg flex items-center justify-center mb-3">
+                                                 <TargetIcon className="w-5 h-5" />
+                                             </div>
+                                             <h3 className="font-bold text-base text-gray-900 dark:text-white mb-1">1. Set Your Goal</h3>
+                                             <p className="text-gray-500 text-xs">You've set a daily goal of {dailyGoal}% quality. Adjust in Goals tab.</p>
+                                         </div>
+                                         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                                             <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-lg flex items-center justify-center mb-3">
+                                                 <VideoCameraIcon className="w-5 h-5" />
+                                             </div>
+                                             <h3 className="font-bold text-base text-gray-900 dark:text-white mb-1">2. Live Feedback</h3>
+                                             <p className="text-gray-500 text-xs">Use the camera to get real-time corrections. We'll nudge you gently.</p>
+                                         </div>
+                                         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                                             <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-lg flex items-center justify-center mb-3">
+                                                 <ChartBarSquareIcon className="w-5 h-5" />
+                                             </div>
+                                             <h3 className="font-bold text-base text-gray-900 dark:text-white mb-1">3. View Insights</h3>
+                                             <p className="text-gray-500 text-xs">Dashboard will transform to show analytics after your first session.</p>
+                                         </div>
                                      </div>
-                                </div>
-                             </div>
-
-                             {/* New User Empty State - "Start Live" CTA (Wider & Minimalist) */}
-                             {history.length === 0 && (
-                                <div className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-                                    <div className="relative z-10 max-w-2xl">
-                                        <h2 className="text-2xl md:text-3xl font-bold mb-2">Let's improve your posture!</h2>
-                                        <p className="text-indigo-100 text-base md:text-lg mb-0">
-                                            Start your first live session to get real-time feedback.
-                                        </p>
-                                    </div>
-                                    <div className="relative z-10 flex-shrink-0">
-                                        <button 
-                                            onClick={() => setActiveView('live')}
-                                            className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg flex items-center gap-2 whitespace-nowrap"
-                                        >
-                                            <VideoCameraIcon className="w-5 h-5" /> Start First Session
-                                        </button>
-                                    </div>
-                                    {/* Decorative Icon */}
-                                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/4 opacity-10 pointer-events-none">
-                                        <BoltIcon className="w-64 h-64" />
-                                    </div>
-                                </div>
-                             )}
-
-                             {/* Top Row: Stats Cards */}
-                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <StatsCard 
-                                    title="Sessions Today" 
-                                    value={sessionsCompletedToday} 
-                                    unit="Hrs" 
-                                    trend={`${parseFloat(sessionsCompletedToday) >= dailySessionGoal ? 'Goal Met' : `${Math.round((parseFloat(sessionsCompletedToday)/dailySessionGoal)*100)}%`}`} 
-                                    icon={<ClockIcon className="w-6 h-6 text-blue-600 dark:text-blue-400"/>} 
-                                    iconBg="bg-blue-100 dark:bg-blue-900/30"
-                                />
-                                <StatsCard 
-                                    title="Current Posture" 
-                                    value={isTracking ? postureStatus : 'Off'} 
-                                    unit="" 
-                                    trend={isTracking && postureStatus === 'Good Posture' ? 'Great' : '---'} 
-                                    icon={<CheckBadgeIcon className="w-6 h-6 text-green-600 dark:text-green-400"/>} 
-                                    iconBg="bg-green-100 dark:bg-green-900/30"
-                                />
-                                <StatsCard 
-                                    title="Posture Goal" 
-                                    value={`${dailyGoal}%`} 
-                                    unit="Target" 
-                                    trend="On Track" 
-                                    icon={<TargetIcon className="w-6 h-6 text-purple-600 dark:text-purple-400"/>} 
-                                    iconBg="bg-purple-100 dark:bg-purple-900/30"
-                                />
-                             </div>
-
-                             {/* Middle Row: Heatmap and Weekly Chart */}
-                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-                                 {/* Heatmap takes 2/3 width */}
-                                 <div className="lg:col-span-2 h-full">
-                                     <ActivityHeatmap historyData={history} theme={theme} />
                                  </div>
-                                 
-                                 {/* Analytics Chart */}
-                                 <div className="lg:col-span-1 h-full min-h-[320px]">
-                                    <AnalyticsChart theme={theme} data={history.map(h => ({ date: new Date(h.date).toLocaleDateString(undefined, {weekday: 'short'}), score: Math.round((h.goodDuration/h.duration)*100) })).slice(0, 7)} />
-                                 </div>
-                             </div>
+                             ) : (
+                                 /* RETURNING USER DASHBOARD VIEW */
+                                 <div className="space-y-6 animate-in fade-in">
+                                     {/* Top Row: Stats Cards */}
+                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <StatsCard 
+                                            title="Time Tracked" 
+                                            value={timeTrackedToday.value} 
+                                            unit={timeTrackedToday.unit}
+                                            trend={`${timeTrackedToday.rawHours >= dailySessionGoal ? 'Goal Met' : `${Math.round((timeTrackedToday.rawHours/dailySessionGoal)*100)}%`}`} 
+                                            icon={<ClockIcon className="w-6 h-6 text-blue-600 dark:text-blue-400"/>} 
+                                            iconBg="bg-blue-100 dark:bg-blue-900/30"
+                                        />
+                                        <StatsCard 
+                                            title="Current Posture" 
+                                            value={isTracking ? postureStatus : 'Off'} 
+                                            unit="" 
+                                            trend={isTracking && postureStatus === 'Good Posture' ? 'Great' : '---'} 
+                                            icon={<CheckBadgeIcon className="w-6 h-6 text-green-600 dark:text-green-400"/>} 
+                                            iconBg="bg-green-100 dark:bg-green-900/30"
+                                        />
+                                        <StatsCard 
+                                            title="Posture Goal" 
+                                            value={`${dailyGoal}%`} 
+                                            unit="Target" 
+                                            trend="On Track" 
+                                            icon={<TargetIcon className="w-6 h-6 text-purple-600 dark:text-purple-400"/>} 
+                                            iconBg="bg-purple-100 dark:bg-purple-900/30"
+                                        />
+                                     </div>
 
-                             {/* Bottom Row: Activity Feed - Only show if history exists */}
-                             {history.length > 0 && (
-                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Latest Activity</h3>
-                                    <ActivityFeed 
-                                        onNavigate={setActiveView} 
-                                        history={history} 
-                                        lastTip={lastTip}
-                                        currentGoal={dailyGoal}
-                                    />
-                                </div>
+                                     {/* Middle Row: Heatmap and Weekly Chart */}
+                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                                         {/* Heatmap takes 2/3 width */}
+                                         <div className="lg:col-span-2 h-full">
+                                             <ActivityHeatmap historyData={history} theme={theme} />
+                                         </div>
+                                         
+                                         {/* Analytics Chart */}
+                                         <div className="lg:col-span-1 h-full min-h-[280px]">
+                                            <AnalyticsChart theme={theme} data={history.map(h => ({ date: new Date(h.date).toLocaleDateString(undefined, {weekday: 'short'}), score: Math.round((h.goodDuration/h.duration)*100) })).slice(0, 7)} />
+                                         </div>
+                                     </div>
+
+                                     {/* Bottom Row: Activity Feed */}
+                                     <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                                         <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3">Latest Activity</h3>
+                                         <ActivityFeed 
+                                             onNavigate={setActiveView} 
+                                             history={history} 
+                                             lastTip={lastTip}
+                                             currentGoal={dailyGoal}
+                                         />
+                                     </div>
+                                 </div>
                              )}
                          </div>
                      )}
 
-                     {activeView === 'live' && (
+                     {activeView === 'tracking' && (
                          <LiveTrackingView 
-                            videoRef={videoRef}
+                            stream={activeStream}
                             postureStatus={postureStatus}
                             isTracking={isTracking}
                             onToggleTracking={toggleTracking}
@@ -641,7 +843,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                          />
                      )}
 
-                     {activeView === 'history' && <SessionHistory history={history} onClearHistory={handleClearHistory} />}
+                     {activeView === 'history' && <SessionHistory history={history} />}
                      
                      {activeView === 'goals' && (
                         <GoalsView 
@@ -649,6 +851,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                             onSetGoal={handleSetGoal} 
                             sessionGoal={dailySessionGoal}
                             onSetSessionGoal={handleSetSessionGoal}
+                            history={history}
+                            sensitivity={sensitivity}
+                            onSetSensitivity={handleSetSensitivity}
                         />
                      )}
                      
@@ -669,7 +874,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                      
                      {activeView === 'plans' && <PlansView />}
 
-                     {activeView === 'badges' && <BadgesView />}
+                     {activeView === 'badges' && <BadgesView unlockedBadges={unlockedBadges} />}
                  </div>
              </div>
        </main>
@@ -680,10 +885,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
                onComplete={handleCompleteOnboarding}
                onSetGoal={handleSetGoal}
                onSetSessionGoal={handleSetSessionGoal}
-               onSetFocusArea={handleSetFocusArea}
+               onSetSensitivity={handleSetSensitivity}
                currentGoal={dailyGoal}
                currentSessionGoal={dailySessionGoal}
-               currentFocusArea={focusArea}
+               currentSensitivity={sensitivity}
            />
        )}
     </div>

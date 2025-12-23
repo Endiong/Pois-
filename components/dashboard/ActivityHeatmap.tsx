@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { FireIcon, TrophyIcon, CalendarIcon } from '../icons/Icons';
 import { PostureHistoryItem } from '../../types';
@@ -11,6 +10,14 @@ interface ActivityHeatmapProps {
 const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ historyData, theme = 'light' }) => {
   const [hoveredDay, setHoveredDay] = useState<any>(null);
   
+  // Helper to format duration for display
+  const formatDuration = (seconds: number) => {
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      if (hrs > 0) return `${hrs}h ${mins}m`;
+      return `${mins}m`;
+  };
+
   // Generate calendar data for the current year (Jan 1 to Dec 31)
   const calendarData = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -49,18 +56,17 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ historyData, theme = 
         const totalSeconds = dayData.reduce((sum, session) => sum + session.duration, 0);
         // 1 Session = 1 Hour (3600 seconds)
         const hours = totalSeconds / 3600;
-        const sessions = Math.floor(hours); 
+        const sessionCount = dayData.length;
         
         const hasRealData = dayData.length > 0;
         let level = 0;
-        let displaySessions = sessions;
         
         if (hasRealData) {
-             // Level logic: 0 = No session, 1-4 = 1hr to 4hr+
+             // Level logic based on duration: 0 = No session, 1-4
              if (totalSeconds === 0) level = 0;
-             else if (hours < 1.5) level = 1;
-             else if (hours < 2.5) level = 2;
-             else if (hours < 3.5) level = 3;
+             else if (hours < 0.5) level = 1; // 30 mins
+             else if (hours < 1.5) level = 2; // 1.5 hours
+             else if (hours < 3.0) level = 3; // 3 hours
              else level = 4;
         }
 
@@ -68,8 +74,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ historyData, theme = 
             date: new Date(currentDate),
             dateStr: dayStr,
             tracked: hasRealData,
-            isRandom: false,
-            sessions: displaySessions,
+            sessionCount: sessionCount,
             totalSeconds,
             level,
             placeholder: false
@@ -82,9 +87,6 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ historyData, theme = 
   }, [historyData]); 
   
   // Stats calculations
-  // Note: Streak calculation was moved to DashboardPage for the hero card, 
-  // but we might want to display a year-specific streak or just reuse the logic here if needed.
-  // For now, let's recalculate a simple one for the heatmap context if we want to show it.
   const currentStreak = useMemo(() => {
     let streak = 0;
     const today = new Date();
@@ -95,17 +97,28 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ historyData, theme = 
     
     for (const day of sortedDays) {
       if (day.dateStr > todayStr) continue;
-      // Count streak if at least 1 session (level > 0) or tracked data exists
-      if (day.tracked || (day.level > 0)) streak++; 
+      // Streak logic: Must be tracked AND have >= 3 mins (180s) total duration
+      // This matches the dashboard logic requested by the user
+      if (day.tracked && day.totalSeconds >= 180) streak++; 
       else if (streak > 0 && day.dateStr < todayStr) break; // Break if we miss a day before today
     }
     return streak;
   }, [calendarData]);
 
-  const totalSessions = useMemo(() => {
-      // Sum of all sessions (using real data)
-      return historyData.reduce((acc, curr) => acc + (curr.duration / 3600), 0).toFixed(1);
+  const totalSessionsCount = useMemo(() => {
+      return historyData.length;
   }, [historyData]);
+
+  // Find the day with the MAX total duration
+  const longestDay = useMemo(() => {
+      if (calendarData.length === 0) return 0;
+      // Filter only real days with data
+      const trackedDays = calendarData.filter(d => !d.placeholder && d.tracked);
+      if (trackedDays.length === 0) return 0;
+      
+      const maxSeconds = Math.max(...trackedDays.map(d => d.totalSeconds));
+      return maxSeconds;
+  }, [calendarData]);
 
   // Group by weeks
   const weeks = useMemo(() => {
@@ -155,17 +168,16 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ historyData, theme = 
             <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 {currentYear} Sessions
             </h3>
-            <span className="text-xs text-gray-500 font-medium">(1 Session = 1 Hour)</span>
           </div>
           <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-wider">
-            <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>0</span>
+            <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>Less</span>
             {[0, 1, 2, 3, 4].map(level => (
               <div
                 key={level}
                 className={`w-3 h-3 rounded-sm ${getColorClass(level).split(' ')[0]}`}
               />
             ))}
-            <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>4+ Sess.</span>
+            <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>More</span>
           </div>
       </div>
 
@@ -183,18 +195,15 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ historyData, theme = 
                <TrophyIcon className="w-5 h-5" />
             </div>
             <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                {/* Best session calculation */}
-                {historyData.length > 0 
-                    ? Math.floor(Math.max(...calendarData.filter(d=>d.tracked).map(d => d.totalSeconds)) / 3600)
-                    : 0}
+                {formatDuration(longestDay)}
             </div>
-            <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Best (Sess.)</div>
+            <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Longest Day</div>
         </div>
         <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-3 text-center border border-gray-100 dark:border-gray-700">
             <div className="flex justify-center mb-1 text-blue-500">
                <CalendarIcon className="w-5 h-5" />
             </div>
-            <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{Math.floor(Number(totalSessions))}</div>
+            <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{totalSessionsCount}</div>
             <div className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Total Sess.</div>
         </div>
       </div>
@@ -270,7 +279,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ historyData, theme = 
                 </span>
                 <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
                     {hoveredDay.tracked 
-                        ? `${hoveredDay.sessions} Sessions (${(hoveredDay.totalSeconds / 3600).toFixed(1)} hrs)` 
+                        ? `${hoveredDay.sessionCount} Sessions (${formatDuration(hoveredDay.totalSeconds)})` 
                         : 'No sessions'}
                 </span>
              </div>
